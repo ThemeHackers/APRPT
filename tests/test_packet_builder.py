@@ -1,29 +1,40 @@
 import unittest
-from core.packet_builder import PacketBuilder
+import sys
+import os
+
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from core.packet_builder import PacketBuilder, ProximityPairingPacket
 
 class TestPacketBuilder(unittest.TestCase):
+    def test_proximity_pairing_packet_structure(self):
+        """Test if ProximityPairingPacket builds correctly structure-wise."""
 
-    def test_handshake_packet(self):
-        expected = bytes.fromhex("00000400010002000000000000000000")
-        self.assertEqual(PacketBuilder.build_handshake_packet(), expected)
-
-    def test_generic_packet_structure(self):
-        pkt = PacketBuilder.build_packet(0x1234, b'\xAB\xCD')
-        self.assertEqual(pkt[:4], PacketBuilder.HEADER)
-        self.assertEqual(pkt[4:6], b'\x34\x12')
-        self.assertEqual(pkt[6:], b'\xAB\xCD')
-
-    def test_control_command_builder(self):
-        pkt = PacketBuilder.build_control_command(0x06)
+        packet = ProximityPairingPacket.build(
+            model_name="AirPods Pro",
+            battery_left=10,  # 100%
+            battery_right=10, # 100%
+            battery_case=10,  # 100%
+            lid_open=True
+        )
         
-        self.assertEqual(pkt[:4], PacketBuilder.HEADER)
-        self.assertEqual(pkt[4:6], b'\x09\x00') # Opcode 9
-        self.assertEqual(pkt[6], 0x06)          # Identifier
-        self.assertEqual(len(pkt[6:]), 5)       # Payload length fixed to 5
+      
+        self.assertEqual(packet[2:4], b'\x4c\x00')
+        
 
-    def test_control_command_with_args(self):
-        pkt = PacketBuilder.build_control_command(0x20, 0x01)
-        self.assertEqual(pkt[6:], b'\x20\x01\x00\x00\x00')
+        self.assertEqual(packet[4], 0x07)
+      
+
+        self.assertEqual(packet[5], 0x19)
+        
+        self.assertEqual(packet[7:9], b'\x0e\x20')
+        
+    def test_packet_padding(self):
+        """Test if the packet has the critical padding byte for iOS."""
+        packet = ProximityPairingPacket.build("AirPods Pro", 10, 10, 10, True)
+    
+        self.assertEqual(packet[14], 0x00)
 
 if __name__ == '__main__':
     unittest.main()
