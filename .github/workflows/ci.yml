@@ -1,46 +1,54 @@
 name: APRPT CI
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["main"]
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-        
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        # Install pybluez dependencies (might be tricky on CI without bluetooth headers, but we can try or mock)
-        # Note: pybluez often fails on CI due to missing libbluetooth-dev. 
-        # We will attempt to install system deps.
-        
-    - name: Install System Dependencies (BlueZ)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libbluetooth-dev bluetooth bluez
-        
-    - name: Run Tests
-      run: |
-        # Set PYTHONPATH so tests can import 'core' and 'modules'
-        export PYTHONPATH=$PYTHONPATH:.
-        python -m unittest discover tests
-        
-    - name: Syntax Check (Modules)
-      run: |
-        # Verify no syntax errors in critical modules
-        python -m py_compile modules/honeypot.py
-        python -m py_compile modules/sniffer.py
-        python -m py_compile modules/advertising.py
-        python -m py_compile modules/control.py
+    build-and-test:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Set up Python 3.10
+              uses: actions/setup-python@v3
+              with:
+                  python-version: "3.10"
+
+            - name: Install System Dependencies
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y bluez libpcap-dev libev-dev libnl-3-dev libnl-genl-3-dev libnl-route-3-dev cmake libbluetooth-dev
+
+            - name: Install PyBluez from source
+              run: |
+                  git clone https://github.com/pybluez/pybluez
+                  cd pybluez
+                  python setup.py install
+                  cd ..
+
+            - name: Install other dependencies
+              run: |
+                  python -m pip install --upgrade pip setuptools wheel
+                  if [ -f requirements.txt ]; then 
+                    # Remove pybluez from requirements.txt to avoid reinstalling the broken PyPI version
+                    sed -i '/pybluez/I d' requirements.txt
+                    pip install -r requirements.txt
+                  fi
+
+            - name: Run Tests
+              run: |
+                  # Set PYTHONPATH so tests can import 'core' and 'modules'
+                  export PYTHONPATH=$PYTHONPATH:.
+                  python -m unittest discover tests
+
+            - name: Syntax Check (Modules)
+              run: |
+                  # Verify no syntax errors in critical modules
+                  python -m py_compile modules/honeypot.py
+                  python -m py_compile modules/sniffer.py
+                  python -m py_compile modules/advertising.py
+                  python -m py_compile modules/control.py
