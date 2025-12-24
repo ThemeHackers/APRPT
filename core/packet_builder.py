@@ -74,9 +74,11 @@ class ProximityPairingPacket:
     def build(model_name="AirPods", 
               battery_left=100, battery_right=100, battery_case=100, 
               charging_left=False, charging_right=False, charging_case=False,
-              lid_open=True, color=0x00):
+              lid_open=True, color=0x00, subtype=0x07):
         
-        prefix = b'\x07\x19'
+        # Subtype 0x07 = Proximity Pairing
+        # Subtype 0x10 = Nearby Info (Battery Status)
+        prefix = bytes([subtype, 0x19])
         pairing_mode = b'\x01'
         model_bytes = bytes(ProximityPairingPacket.MODELS.get(model_name, (0x02, 0x20)))
         status = b'\x20' 
