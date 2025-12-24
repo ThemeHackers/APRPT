@@ -57,7 +57,7 @@ class SnifferModule:
         
         model_name = models.get(model_hex, f"Unknown ({model_hex})")
         if is_pairing:
-            model_name = f"[bold red]{model_name} (SPOOF?)[/bold red]"
+            model_name = f"[bold blink red] !!! SPOOF DETECTED !!! [/bold blink red] {model_name}"
         
         info["model"] = model_name
         
@@ -150,7 +150,12 @@ class SnifferModule:
                                         if subtype == 0x07:
                                             decoded = self.decode_proximity_packet(payload)
                                         elif subtype == 0x10:
-                                            decoded = {"model": "Nearby Info (0x10)"}
+                                         
+                                            decoded = self.decode_proximity_packet(payload)
+                                            if "model" in decoded:
+                                                decoded["model"] = f"Nearby Info (0x10) - {decoded['model']}"
+                                            else:
+                                                 decoded["model"] = "Nearby Info (0x10)"
                                         else:
                                             decoded = {"model": f"Other Apple (0x{subtype:02x})"}
                                             
