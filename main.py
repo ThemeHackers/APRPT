@@ -25,7 +25,7 @@ def main():
     if len(sys.argv) == 1:
         interactive_mode()
     
-    parser.add_argument("-t", "--target", help="Target MAC Address (Required for recon/hijack/dos)")
+    parser.add_argument("-t", "--target", help="Target MAC Address (Required for recon/hijack/dos/control)")
     parser.add_argument("-m", "--mode", help="Mode: recon, hijack, dos, advertise, honeypot, sniff, bleed, control", choices=["recon", "hijack", "dos", "advertise", "honeypot", "sniff", "bleed", "control"], required=True)
     parser.add_argument("-M", "--model", help="Spoof Model Name (e.g. 'AirPods Pro') or ID for advertise mode.")
 
