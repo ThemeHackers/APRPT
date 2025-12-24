@@ -50,7 +50,6 @@ class ReconModule:
     def parse_metadata(self, data):
         try:
             decoded = data.decode('utf-8', errors='ignore')
-            # Clean up non-printable chars for display
             clean_decoded = "".join(ch for ch in decoded if ch.isprintable())
             
             if self.console:
@@ -61,7 +60,6 @@ class ReconModule:
                 table.add_row("Raw Hex", data.hex()[:60] + "..." if len(data.hex()) > 60 else data.hex())
                 table.add_row("Decoded String", clean_decoded)
                 
-                # Heuristic parsing (Mock logic for PoC)
                 if "AirPods" in clean_decoded:
                      table.add_row("Detected Model", "[bold green]AirPods (Confirmed)[/bold green]")
                 else:

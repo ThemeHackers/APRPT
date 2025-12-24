@@ -1,137 +1,127 @@
-# Apple Protocol Research & Pentest Tool (APRPT)
+# 🍎 **APRPT** (Apple Protocol Research & Pentest Tool)
 
-**APRPT** is a proof-of-concept research tool designed to analyze and interact with the Apple Accessory Protocol (AAP) over Bluetooth Low Energy (BLE).
+> **"Bridging the gap between Passive Spoofing & Active Manipulation"**
 
-## 🚀 Concept & Philosophy
+![Python](https://img.shields.io/badge/Python-3.x-blue?style=for-the-badge&logo=python)
+![Platform](https://img.shields.io/badge/Platform-Linux-red?style=for-the-badge&logo=linux)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-PoC-yellow?style=for-the-badge)
 
-This project bridges the gap between passive spoofing and active protocol interaction by combining two core concepts found in `R&D/AppleBLE` and `R&D/librepods`:
+**APRPT** is a powerful research framework designed to analyze, interact with, and stress-test the **Apple Accessory Protocol (AAP)** over Bluetooth Low Energy (BLE). It unifies "Ghost" techniques (Spoofing) with "Aggressor" techniques (Active L2CAP Control).
 
-1.  **Advertising & Spoofing**: Mimicking Apple devices to trigger UI events (Popups).
-2.  **Active Protocol Control**: Establishing L2CAP connections to interact with internal device logic (AAP).
+---
 
-## 🔬 Mode Technical Breakdown
+## 🚀 **Concept & Philosophy**
 
-Here is the detailed technical explanation for every mode available in the tool:
+This project fuses two distinct research philosophies into one offensive toolkit:
 
-### 1. Advertise Mode (`-m advertise`)
-**Function**: Broadcasts fake "Proximity Pairing" signals.
-**Goal**: To verify hardware transmission capabilities and demonstrate the "Phantom Device" effect.
+1.  🎭 **The Phantom (Advertising & Spoofing)**: Mimicking Apple devices to trigger UI popups and "phantom" presence. (Derived from `AppleBLE`)
+2.  ⚔️ **The Aggressor (Active Protocol Control)**: Establishing raw **L2CAP** connections to hijack device state. (Derived from `LibrePods`)
 
-*   **Mechanism**: Uses the HCI interface to send BLE Advertisement packets.
-*   **Packet Structure**:
-    *   **Length**: `0x1E` (30 bytes)
-    *   **Type**: `0xFF` (Manufacturer Specific Data)
-    *   **Company ID**: `0x004C` (Apple Inc.)
-    *   **Beacon Type**: `0x07` (AirPods), `0x05`, `0x10`, etc.
-*   **Effect**: iOS devices scanning in the background receive these packets and trigger the setup animation (the white bottom sheet popup), assuming a device is nearby.
+---
 
-### 2. Recon Mode (`-m recon`)
-**Function**: Extracts device information not typically visible in standard BLE scans.
-**Goal**: To identify firmware version, serial number, and battery status.
+## 🛠️ **Features & Modes**
 
-*   **Mechanism**: Connects via L2CAP PSM `0x1001` (Apple Accessory Protocol).
-*   **Workflow**:
-    1.  **Handshake**: Sends a specific byte sequence to initialize the AAP session.
-    2.  **Subscription**: Sends Opcode `0x000F` (Subscribe Notifications) to listen for updates.
-    3.  **Metadata Request**: Sends Opcode `0x1D` (Get Metadata).
-*   **Payload**: The response to `0x1D` contains a TLV (Type-Length-Value) structure with details like the Serial Number, Model string, and current Firmware Revision.
+| Mode | Flag | Functionality |
+| :--- | :--- | :--- |
+| **Advertiser** | `-m advertise` | 📡 **Spoofing**: Broadcasts fake "Proximity Pairing" signals to trigger popups on nearby iOS devices. |
+| **Passive Sniffer** | `-m sniff` | 🕵️ **Surveillance**: Decodes nearby Apple advertisements (Battery, Model, Lid Status) *without connecting*. |
+| **Reconnaissance** | `-m recon` | 🔍 **Intel**: Connects & extracts Serial Numbers, Firmware Versions via standard AAP. |
+| **Hijack** | `-m hijack` | 🔀 **Control**: Forces target AirPods to switch audio routing to the attacker's machine. |
+| **Active Control** | `-m control` | 🎮 **Manipulation**: Toggles **ANC / Transparency** modes or renames devices via L2CAP. |
+| **BLE Fuzzer** | `-m bleed` | 🩸 **Stress Test**: Floods the environment with malformed/oversized packets. |
+| **HoneyPot** | `-m honeypot` | 🕸️ **Trap**: Detects and logs MAC addresses of victims attempting to connect to spoofed signals. |
 
-### 3. Hijack Mode (`-m hijack`)
-**Function**: Attempts to force the target device to switch its active audio source.
-**Goal**: To demonstrate "Seamless Switching" vulnerabilities.
+---
 
-*   **Mechanism**: Sends high-priority Control Commands over the established L2CAP link.
-*   **Key Opcodes**:
-    *   **Opcode**: `0x09` (Control Command)
-    *   **Payload `0x0601` (Owns Connection)**: Asserts urgency / ownership of the link.
-    *   **Payload `0x2001` (Auto Connect)**: Instructs the device to trigger an auto-connection routine to the attacker's MAC address.
-*   **Effect**: If successful, the AirPods disconnect from the current iPhone/Mac and connect to the Linux machine running this script.
+## 🔬 **Technical Deep Dive**
 
-### 4. Multi-Device Spoofing (NEW)
-**Function**: Mimic various Apple devices.
-**Goal**: To display different popups (AirPods Pro, Max, Apple TV, etc.) on the victim's screen.
+### 1. **Advertise Mode** (`-m advertise`)
+*   **Mechanism**: Raw HCI commands to broadcast Manufacturer Specific Data (`0x004C`).
+*   **Payload**: Uses Beacon Type `0x07` (Proximity Pairing) to mimic AirPods.
+*   **Effect**: Triggers the "Not Your AirPods" setup animation on iOS.
 
-*   **Usage**:
-    *   Interactive: Run `sudo python3 main.py -m advertise` and select from the menu.
-    *   Direct: Run `sudo python3 main.py -m advertise -M "AirPods Pro"`
-*   **Mechanism**: Changes the **Product ID** sequence in the BLE advertisement payload to match specific Apple devices.
+### 2. **Passive Sniffer** (`-m sniff`)
+*   **Mechanism**: Promiscuous BLE scanning + Bitwise decoding of `0x07` payloads.
+*   **Capabilities**:
+    *   🔋 Battery Levels (L/R/Case)
+    *   🎧 Device Model Identification
+    *   🚨 **Spoof Detection**: Flags devices broadcasting "Pairing" bits suspiciously.
 
-### 5. DoS Mode (`-m dos`)
-**Function**: Stress tests the AAP implementation.
-**Goal**: To cause a denial of service or instability in the target device's Bluetooth stack.
+### 3. **Active Control** (`-m control`)
+*   **Mechanism**: Connects to **L2CAP PSM 0x1001**.
+*   **Attack**: Sends AAP `Opcode 0x09` (Control Command).
+    *   *Force Transparency*: Disable ANC against user will.
+    *   *Force ANC*: Isolate user from environment.
 
-*   **Mechanism**: Continuously sends malformed or excessive AAP commands over an established L2CAP link.
-*   **Key Opcodes**:
-    *   **Opcode**: `0x09` (Control Command) with invalid payloads.
-    *   **Opcode**: Rapid-fire `0x000F` (Subscribe Notifications) and `0x0010` (Unsubscribe Notifications).
-*   **Effect**: Can lead to device crashes, temporary unresponsiveness, or forced disconnections.
+---
 
-### 6. HoneyPot Mode (`-m honeypot`)
-**Function**: Traps victim devices that attempt to connect.
-**Goal**: To detect which specific devices are responding to the spoofed signals.
+## 📦 **Installation**
 
-*   **Mechanism**:
-    *   Switches Advertising Type from `ADV_NONCONN_IND` (Broadcast Only) to `ADV_IND` (Connectable).
-    *   Listens on the HCI socket for the `EVT_LE_CONN_COMPLETE` (0x3E) event.
-*   **Effect**:
-    *   The victim sees the popup and taps "Connect".
-    *   The iOS device initiates a Link Layer connection request.
-    *   The tool intercepts this request, extracts the **Mac Address** and **Connection Handle**, and alerts the attacker.
-    *   It effectively deanonymizes the user who fell for the spoof.
+> ⚠️ **Prerequisites**: Linux OS with a Bluetooth 4.0+ Adapter.
 
-## 📋 Requirements
-
-*   **Operating System**: Linux (Required for raw L2CAP socket support via `bluez`).
-*   **Hardware**: Bluetooth 4.0+ Adapter (Verified with Ugreen BLE 5.3).
-*   **Dependencies**: python3, pybluez
-*   **Root Privileges**: Required to access raw HCI sockets (`sudo` or `setcap`).
-
-## 📦 Installation
-
-Please follow these instructions exactly to avoid issues with Bluetooth dependencies (specifically `pybluez`).
-
-### 1. Install System Dependencies
+### 1. System Dependencies
 ```bash
 sudo apt update && sudo apt install -y bluez libpcap-dev libev-dev libnl-3-dev libnl-genl-3-dev libnl-route-3-dev cmake libbluetooth-dev
 ```
 
-### 2. Install Python Dependencies
-**Important:** Do not simply run `pip install pybluez`. The version on PyPI is broken.
-
+### 2. Python Setup
+**CRITICAL**: Do NOT install `pybluez` via pip directly. Use the source:
 ```bash
-# Install pybluez from source
+# Install PyBluez from source (Fixed for Python 3)
 pip3 install git+https://github.com/pybluez/pybluez.git#egg=pybluez
 
-# Install other requirements
-pip3 install pycryptodome
+# Install crypto libs
+pip3 install pycryptodome rich
 ```
-*(Note: Ensure your Bluetooth adapter is recognized as `hci0` using `hcitool dev`)*
 
-## 💻 Usage
+---
 
-Run the tool using `python3 main.py`. Ensure you run with `sudo`.
+## 💻 **Usage Guide**
 
+**Note**: All commands require **ROOT** privileges (`sudo`) for raw socket access.
+
+### 📡 Spoofing (Visual Spam)
 ```bash
-# 1. Advertise (Spoofing) with Menu
 sudo python3 main.py -m advertise
-
-# 2. Advertise Specific Model
+# Or specific model:
 sudo python3 main.py -m advertise -M "AirPods Max"
+```
 
-# 3. Recon (Information Gathering)
-sudo python3 main.py -t <TARGET_MAC> -m recon
+### 🕵️ Passive Surveillance
+```bash
+sudo python3 main.py -m sniff
+```
 
-# 4. Hijack (Active Attack)
-sudo python3 main.py -t <TARGET_MAC> -m hijack
+### 🎮 Active Hijack
+```bash
+sudo python3 main.py -m control -t <TARGET_MAC>
+```
 
-# 5. DoS (Stress Test)
-sudo python3 main.py -t <TARGET_MAC> -m dos
+### 🩸 Fuzzing / Stress Test
+```bash
+sudo python3 main.py -m bleed
+```
 
-# 5. HoneyPot (Victim Detection)
+### 🕸️ Victim Trap (HoneyPot)
+```bash
 sudo python3 main.py -m honeypot
 ```
 
-## ⚠️ Disclaimer
+---
 
-This tool is for **Educational and Research Purposes Only**.
-The authors are not responsible for any misuse. Do not use this tool on devices you do not own or have explicit permission to test.
+## ⚠️ **Disclaimer & Ethics**
+
+> 🛑 **EDUCATIONAL USE ONLY**
+>
+> This tool involves **Active Interception** and **Protocol Manipulation**. It is intended for researchers to demonstrate Bluetooth risks.
+> *   Do not use on devices you do not own.
+> *   Do not use in public spaces to harass others.
+> *   The authors are not responsible for bricked devices or legal consequences.
+
+---
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Made%20with-Python-blue" />
+  <img src="https://img.shields.io/badge/Security-Research-red" />
+</p>

@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 from flask import Flask, render_template, jsonify, request
 import random
 import sys

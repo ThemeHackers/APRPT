@@ -9,7 +9,6 @@ from queue import Queue
 from threading import Thread
 from typing import Any, Dict, List, Optional
 
-# Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QCheckBox, QPushButton, QLineEdit, QFormLayout, QGridLayout
@@ -41,7 +40,6 @@ class ATTManager:
         self.listeners: Dict[int, List[Any]] = {}
         self.notification_thread: Optional[Thread] = None
         self.running: bool = False
-        # Avoid logging full MAC address to prevent sensitive data exposure
         mac_tail: str = ':'.join(mac_address.split(':')[-2:]) if isinstance(mac_address, str) and ':' in mac_address else '[redacted]'
         logging.info(f"ATTManager initialized")
 
@@ -249,10 +247,8 @@ def send_hearing_aid_settings(att_manager: ATTManager, settings: HearingAidSetti
         return
     buffer: bytearray = bytearray(data)
 
-    # Modify byte at index 2 to 0x64
     buffer[2] = 0x64
 
-    # Left ear
     for i in range(8):
         struct.pack_into('<f', buffer, 4 + i * 4, settings.left_eq[i])
     struct.pack_into('<f', buffer, 36, settings.left_amplification)
@@ -260,7 +256,6 @@ def send_hearing_aid_settings(att_manager: ATTManager, settings: HearingAidSetti
     struct.pack_into('<f', buffer, 44, 1.0 if settings.left_conversation_boost else 0.0)
     struct.pack_into('<f', buffer, 48, settings.left_ambient_noise_reduction)
 
-    # Right ear
     for i in range(8):
         struct.pack_into('<f', buffer, 52 + i * 4, settings.right_eq[i])
     struct.pack_into('<f', buffer, 84, settings.right_amplification)
@@ -268,7 +263,6 @@ def send_hearing_aid_settings(att_manager: ATTManager, settings: HearingAidSetti
     struct.pack_into('<f', buffer, 92, 1.0 if settings.right_conversation_boost else 0.0)
     struct.pack_into('<f', buffer, 96, settings.right_ambient_noise_reduction)
 
-    # Own voice
     struct.pack_into('<f', buffer, 100, settings.own_voice_amplification)
 
     att_manager.write(type('Handle', (), {'name': 'HEARING_AID'})(), buffer)
@@ -297,7 +291,6 @@ class HearingAidApp(QWidget):
         self.setWindowTitle("Hearing Aid Adjustments")
         layout: QVBoxLayout = QVBoxLayout()
 
-        # EQ Inputs
         eq_layout: QGridLayout = QGridLayout()
         self.left_eq_inputs: List[QLineEdit] = []
         self.right_eq_inputs: List[QLineEdit] = []
@@ -323,50 +316,40 @@ class HearingAidApp(QWidget):
         layout.addWidget(QLabel("Loss, in dBHL"))
         layout.addWidget(eq_group)
 
-        # Amplification
         self.amp_slider: QSlider = QSlider(Qt.Horizontal)
         self.amp_slider.setRange(-100, 100)
         self.amp_slider.setValue(50)
         layout.addWidget(QLabel("Amplification"))
         layout.addWidget(self.amp_slider)
 
-        # Balance
         self.balance_slider: QSlider = QSlider(Qt.Horizontal)
         self.balance_slider.setRange(-100, 100)
         self.balance_slider.setValue(50)
         layout.addWidget(QLabel("Balance"))
         layout.addWidget(self.balance_slider)
 
-        # Tone
         self.tone_slider: QSlider = QSlider(Qt.Horizontal)
         self.tone_slider.setRange(-100, 100)
         self.tone_slider.setValue(50)
         layout.addWidget(QLabel("Tone"))
         layout.addWidget(self.tone_slider)
 
-        # Ambient Noise Reduction
         self.anr_slider: QSlider = QSlider(Qt.Horizontal)
         self.anr_slider.setRange(0, 100)
         self.anr_slider.setValue(0)
         layout.addWidget(QLabel("Ambient Noise Reduction"))
         layout.addWidget(self.anr_slider)
 
-        # Conversation Boost
         self.conv_checkbox: QCheckBox = QCheckBox("Conversation Boost")
         layout.addWidget(self.conv_checkbox)
 
-        # Own Voice Amplification
         self.own_voice_slider: QSlider = QSlider(Qt.Horizontal)
         self.own_voice_slider.setRange(0, 100)
         self.own_voice_slider.setValue(50)
-        # layout.addWidget(QLabel("Own Voice Amplification"))
-        # layout.addWidget(self.own_voice_slider) # seems to have no effect
         
-        # Reset button
         self.reset_button: QPushButton = QPushButton("Reset")
         layout.addWidget(self.reset_button)
 
-        # Connect signals
         for input_box in self.left_eq_inputs + self.right_eq_inputs:
             input_box.textChanged.connect(self.on_value_changed)
         self.amp_slider.valueChanged.connect(self.on_value_changed)
@@ -386,7 +369,6 @@ class HearingAidApp(QWidget):
             self.att_manager.connect()
             self.att_manager.enable_notifications(type('Handle', (), {'name': 'HEARING_AID'})())
             self.att_manager.register_listener(ATT_HANDLES['HEARING_AID'], self.on_notification)
-            # Initial read
             data: bytes = self.att_manager.read(type('Handle', (), {'name': 'HEARING_AID'})())
             settings: Optional[HearingAidSettings] = parse_hearing_aid_settings(data)
             if settings:

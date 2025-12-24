@@ -19,7 +19,6 @@ class HijackModule:
              self.log("[red][!] Not connected.[/red]")
              return
 
-        # Use spinner if console is available
         if self.console:
             with self.console.status("[bold red]Hijacking in progress...[/bold red]", spinner="bouncingBar"):
                 self._execute_hijack_sequence()

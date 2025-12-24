@@ -1,19 +1,43 @@
-# System Limitations
+# 🚧 **System Limitations**
 
-## 1. The "Hold Button" Barrier
-When a victim presses **Connect** on their iPhone, the screen transitions to a prompt asking them to **"Hold Button"** on the charging case.
-*   **Symptom**: The process halts at this screen and cannot proceed further.
-*   **Technical Reason**:
-    *   To pass this screen, the device must perform an **Authentication Handshake** with the iPhone.
-    *   This process allows the iPhone to cryptographically verify the device using private keys embedded in the authentic **Apple W1/H1 chips**.
-    *   Since we are using standard generic Bluetooth hardware, we lack these proprietary keys and cannot generate the correct cryptographic response.
-*   **Conclusion**: This is a hardware-based security limitation that cannot be bypassed via software at this time (unless the keys are extracted from a real device).
+> **Note**: While APRPT is powerful, it operates within the constraints of generic Bluetooth hardware and the lack of proprietary Apple cryptographic keys.
 
-## 2. No Full Pairing
-*   This tool functions by **Spoofing** advertisement packets to trick the victim's device into recognizing it as an Apple product.
-*   It **cannot** establish a full pairing relationship that would allow for audio streaming or access to advanced settings.
-*   The primary goals are **Detection** (HoneyPot) and **Annoyance** (DoS/Spam).
+---
 
-## 3. HoneyPot Lock-on Behavior
-*   When the system engages **Lock-on** mode, the victim's iPhone will remain stuck on the "Connecting..." or "Hold Button" screen.
-*   The victim may need to manually disable Bluetooth or restart their device if the tool maintains the connection handle indefinitely.
+## 🔒 **1. The "Hold Button" Barrier**
+*   **Symptom**: Victim's iPhone gets stuck on the **"Hold Button"** screen after connecting.
+*   **Reason**: Missing **Apple W1/H1 Chips**.
+*   **Explanation**: To proceed past this screen, the device must perform a cryptographic handshake using private keys burned into Apple's silicon. Since we are using generic hardware, we cannot forge this signature.
+*   **Impact**: We cannot achieve a "Pairing Success" screen. The "Hold Button" screen is the **maximum theoretical success state** for a software-only spoof.
+
+---
+
+## 👻 **2. Zero-Trust Access**
+*   **Limitation**: No audio streaming or settings access.
+*   **Reason**: Lack of Link Keys.
+*   **Impact**:
+    *   We cannot play music through the victim's phone.
+    *   We cannot access their iCloud settings.
+    *   **Exception**: We *can* hijack audio routing (make them hear *our* audio) via the Hijack module, but we cannot hear *their* audio.
+
+---
+
+## 🪞 **3. Single Adapter Blindness** (`-m sniff`)
+*   ⚠️ **Critical Warning**: You cannot sniff your own packets!
+*   **Scenario**: Running `-m advertise` and `-m sniff` on the same machine with one adapter (`hci0`).
+*   **Result**: The Sniffer will show **Nothing**.
+*   **Fix**: Use a second device (iPhone, Android, or another Laptop) to generate the signals you want to sniff.
+
+---
+
+## 🛡️ **4. Root Privilege Requirement**
+*   **Error**: `_bluetooth.error: (1, 'Operation not permitted')`
+*   **Reason**: Raw HCI socket access requires `CAP_NET_ADMIN`.
+*   **Solution**:
+    > always run with: `sudo python3 main.py ...`
+
+---
+
+## 🕸️ **5. HoneyPot Lock-on**
+*   **Behavior**: When a victim connects to the HoneyPot, their Bluetooth stack may "freeze" on our device.
+*   **Impact**: Determining "who" connected is easy, but "disconnecting" them might require them to physically toggle Bluetooth off/on.

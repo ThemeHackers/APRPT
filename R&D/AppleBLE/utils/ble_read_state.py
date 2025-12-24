@@ -1,9 +1,4 @@
-#!/usr/bin/env python3
-# Author: Dmitry Chastuhin
-# Twitter: https://twitter.com/_chipik
 
-# web: https://hexway.io
-# Twitter: https://twitter.com/_hexway
 import random
 import re
 import sys
@@ -45,7 +40,6 @@ parser.add_argument('-t', '--ttl', type=int, default=15, help='ttl')
 args = parser.parse_args()
 
 if args.check_phone:
-    # import from TrueCaller API lib (sorry, but we did some RE for that :))
     print("Sorry, but we don't provide this functionality as a part of this PoC")
     exit(1)
 if args.airdrop:
@@ -80,30 +74,6 @@ dictOfss = {}
 proxies = {}
 verify = False
 
-# not sure about 1b, 13, 0a, 1a, 17
-# phone_states2 = {
-#                 '01':'Off',
-#                 '03':'Off',
-#                 '07':'Lock screen',
-#                 '09':'Off',
-#                 '0a':'Off',
-#                 '0b':'Home screen',
-#                 '0e':'Calling',
-#                 '11':'Home screen',
-#                 '13':'Off',
-#                 '17':'Lock screen',
-#                 '18':'Off',
-#                 '1a':'Off',
-#                 '1b':'Home screen',
-#                 '1c':'Home screen',
-#                 '47':'Lock screen',
-#                 '4b':'Home screen',
-#                 '4e':'Outgoing call',
-#                 '57':'Lock screen',
-#                 '5a':'Off',
-#                 '5b':'Home screen',
-#                 '5e':'Incoming call',
-#                 }
 phone_states = {
     '01': 'Disabled',
     '03': 'Idle',
@@ -497,7 +467,6 @@ class MainForm(npyscreen.FormBaseNew):
 
     def get_dev_name(self, mac_addr):
         global resolved_devs
-        # self.get_all_dev_names()
         dev_name = ''
         kill = lambda process: process.kill()
         cmd = ['gatttool', '-t', 'random', '--char-read', '--uuid=0x2a24', '-b', mac_addr]
@@ -517,16 +486,13 @@ class MainForm(npyscreen.FormBaseNew):
         init_bluez()
         resolved_devs.append(mac_addr)
         if return_value:
-            # resolved_devs.append(mac_addr)
             self.set_device_val_for_mac(mac_addr, return_value)
 
     def get_all_dev_names(self):
         global resolved_devs
         for phone in phones:
-            # print (phones[phone])
             if (phones[phone]['device'] == 'MacBook' or phones[phone][
                 'device'] == 'iPhone') and phone not in resolved_devs:
-                # print(f"checking {phone}")
                 self.get_dev_name(phone)
 
     def get_mac_val_from_cell(self):
@@ -575,7 +541,6 @@ class MainForm(npyscreen.FormBaseNew):
         if cell == 'Device':
             mac = self.get_mac_val_from_cell()
             thread2 = Thread(target=self.get_dev_name, args=(mac,))
-            # thread2 = Thread(target=self.get_all_dev_names())
             thread2.daemon = True
             thread2.start()
         if cell == 'Phone':
@@ -687,12 +652,6 @@ def put_verb_message(msg, mac):
 
 
 def parse_nearby(mac, header, data):
-    # 0        1        2                                 5
-    # +--------+--------+--------------------------------+
-    # |        |        |                                |
-    # | status | wifi   |           authTag              |
-    # |        |        |                                |
-    # +--------+--------+--------------------------------+
     nearby = {'status': 1,
               'wifi': 1,
               'authTag': 999}
@@ -729,12 +688,6 @@ def parse_nearby(mac, header, data):
 
 
 def parse_nandoff(mac, data):
-    # 0       1          3       4                                   14
-    # +-------+----------+-------+-----------------------------------+
-    # |       |          |       |                                   |
-    # | Clbrd | seq.nmbr | Auth  |     Encrypted payload             |
-    # |       |          |       |                                   |
-    # +-------+----------+-------+-----------------------------------+
     handoff = {'clipboard': 1,
                's_nbr': 2,
                'authTag': 1,
@@ -752,12 +705,6 @@ def parse_nandoff(mac, data):
 
 
 def parse_watch_c(mac, data):
-    # 0          2       3
-    # +----------+-------+
-    # |          |       |
-    # |  Data    | Wrist |
-    # |          |       |
-    # +----------+-------+
     magic_switch = {'data': 2,
                     'wrist': 1
                     }
@@ -775,12 +722,6 @@ def parse_watch_c(mac, data):
 
 
 def parse_wifi_set(mac, data):
-    # 0                                         4
-    # +-----------------------------------------+
-    # |                                         |
-    # |             iCloud ID                   |
-    # |                                         |
-    # +-----------------------------------------+
     wifi_set = {'icloudID': 4}
     result = parse_struct(data, wifi_set)
     put_verb_message("WiFi settings:{}".format(json.dumps(result)), mac)
@@ -793,12 +734,6 @@ def parse_wifi_set(mac, data):
 
 
 def parse_hotspot(mac, data):
-    # 0       1       2           4       5       6
-    # +-------+-------+-----------+-------+-------+
-    # |       |       |           | Net   |  Sig  |
-    # | Ver   | Flags | Bat. lvl  | type  |  str  |
-    # |       |       |           |       |       |
-    # +-------+-------+-----------+-------+--------
 
     hotspot = {'version': 1,
                'flags': 1,
@@ -819,12 +754,6 @@ def parse_hotspot(mac, data):
 
 
 def parse_wifi_j(mac, data):
-    # 0        1       2                        5                         8                       12                     15                     18
-    # +--------+-------+------------------------+-------------------------+-----------------------+----------------------+----------------------+
-    # |        |       |                        |                         |                       |                      |                      |
-    # | flags  | type  |     auth tag           |     sha(appleID)        |   sha(phone_nbr)      |  sha(email)          |   sha(SSID)          |
-    # |        | (0x08)|                        |                         |                       |                      |                      |
-    # +--------+--------------------------------+-------------------------+-----------------------+----------------------+----------------------+
 
     wifi_j = {'flags': 1,
               'type': 1,
@@ -880,12 +809,6 @@ def parse_wifi_j(mac, data):
 
 
 def parse_airpods(mac, data):
-    # 0       1                3        4       5       6       7       8       9                                 25
-    # +-------+----------------+--------+-------+-------+-------+-------+-------+---------------------------------+
-    # |       |      Device    |        |       |       | Lid   |  Dev  |       |                                 |
-    # |  0x01 |      model     |  UTP   | Bat1  | Bat2  | open  |  color|  0x00 |        encrypted payload        |
-    # |       |                |        |       |       | cntr  |       |       |                                 |
-    # +-------+----------------+--------+-------+-------+-------+-------+-------+---------------------------------+
 
     airpods = {'fix1': 1,
                'model': 2,
@@ -924,12 +847,6 @@ def parse_airpods(mac, data):
 
 
 def parse_airdrop_r(mac, data):
-    # 0                                         8        9                11                    13                  15                 17       18
-    # +-----------------------------------------+--------+----------------+---------------------+-------------------+------------------+--------+
-    # |                                         |        |                |                     |                   |                  |        |
-    # |           zeros                         |st(0x01)| sha(AppleID)   | sha(phone)          |  sha(email)       |   sha(email2)    |  zero  |
-    # |                                         |        |                |                     |                   |                  |        |
-    # +-----------------------------------------+--------+----------------+---------------------+-------------------+------------------+--------+
     airdrop_r = {'zeros': 8,
                  'st': 1,
                  'appleID_hash': 2,
@@ -951,12 +868,6 @@ def parse_airdrop_r(mac, data):
 
 
 def parse_airprint(mac, data):
-    # 0       1       2       3           5                                         21       22
-    # +-------+-------+-------+-----------+-----------------------------------------+---------+
-    # |  Addr | Res   | Sec   |   QID or  |                                         |         |
-    # |  Type | path  | Type  |   TCP port|      IPv4 or IPv6 Address               | Power   |
-    # |       | type  |       |           |                                         |         |
-    # +-------+-------+-------+-----------+-----------------------------------------+---------+
     airpirnt = {'addrType': 1,
                 'resPathType': 1,
                 'secType': 1,
@@ -975,12 +886,6 @@ def parse_airprint(mac, data):
 
 
 def parse_airplay(mac, data):
-    # 0       1       2                6
-    # +-------+------------------------+
-    # |       | Config|                |
-    # | Flags | seed  |     IPv4       |
-    # |       |       |                |
-    # +-------+-------+----------------+
     airplay = {'flags': 1,
                'configSeeds': 1,
                'ipV4': 4
@@ -997,12 +902,6 @@ def parse_airplay(mac, data):
 
 
 def parse_homekit(mac, data):
-    # 0       1                7            9             11      12      13
-    # +------------------------+--------------------------+-------+-------+
-    # | Status|                |            |Global State | Conf  | Comp  |
-    # | flag  |  Device ID     | Categoty   |  number     | nmbr  | ver   |
-    # |       |                |            |             |       |       |
-    # +-------+----------------+------------+-------------+-------+-------+
     homekit = {'statusFlag': 1,
                'devID': 6,
                'category': 2,
@@ -1024,12 +923,6 @@ def parse_homekit(mac, data):
 
 
 def parse_siri(mac, data):
-    # 0            2        3        4            6        7
-    # +------------+--------+--------+------------+--------+
-    # |            |        |        |            | Random |
-    # |   hash     | SNR    | Confid |  Dev class | byte   |
-    # |            |        |        |            |        |
-    # +------------+--------+--------+------------+--------+
     siri = {'hash': 2,
             'SNR': 1,
             'confidence': 1,
@@ -1223,7 +1116,6 @@ def get_ssids():
 
 
 def send_imessage(tel, text):
-    # our own service to send iMessage
     data = {"token": "",
             "destination": "+{}".format(tel),
             "text": text

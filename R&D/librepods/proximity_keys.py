@@ -1,8 +1,4 @@
-#!/usr/bin/env python3
 
-# Needs https://github.com/google/bumble on Windows
-# See https://github.com/google/bumble/blob/main/docs/mkdocs/src/platforms/windows.md for usage.
-# You need to associate WinUSB with your Bluetooth interface. Once done, you can roll back to the original driver from Device Manager.
 
 import asyncio
 import colorama
