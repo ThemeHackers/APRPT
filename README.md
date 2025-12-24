@@ -29,6 +29,7 @@ This project fuses two distinct research philosophies into one offensive toolkit
 | **Reconnaissance** | `-m recon` | 🔍 **Intel**: Connects & extracts Serial Numbers, Firmware Versions via standard AAP. |
 | **Hijack** | `-m hijack` | 🔀 **Control**: Forces target AirPods to switch audio routing to the attacker's machine. |
 | **Active Control** | `-m control` | 🎮 **Manipulation**: Toggles **ANC / Transparency** modes or renames devices via L2CAP. |
+| **DoS** | `-m dos` | ⛔ **Denial of Service**: Floods standard AAP commands to crash the firmware. |
 | **BLE Fuzzer** | `-m bleed` | 🩸 **Stress Test**: Floods the environment with malformed/oversized packets. |
 | **HoneyPot** | `-m honeypot` | 🕸️ **Trap**: Detects and logs MAC addresses of victims attempting to connect to spoofed signals. |
 
@@ -93,13 +94,26 @@ sudo python3 main.py -m advertise -M "AirPods Max"
 sudo python3 main.py -m sniff
 ```
 
-### 🎮 Active Hijack
+### 🔍 Recon & Hijack (Legacy)
+```bash
+# Get Info targeting specific device
+sudo python3 main.py -m recon -t <TARGET_MAC>
+
+# Hijack Audio Routing
+sudo python3 main.py -m hijack -t <TARGET_MAC>
+```
+
+### 🎮 Active Control (New Hijack)
 ```bash
 sudo python3 main.py -m control -t <TARGET_MAC>
 ```
 
-### 🩸 Fuzzing / Stress Test
+### 🩸 Fuzzing / DoS
 ```bash
+# Protocol DoS (Targeted)
+sudo python3 main.py -m dos -t <TARGET_MAC>
+
+# BLE Fuzzer (Area Effect)
 sudo python3 main.py -m bleed
 ```
 
