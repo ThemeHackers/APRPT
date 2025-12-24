@@ -17,7 +17,7 @@ class TestSnifferLogic(unittest.TestCase):
         info = self.sniffer.decode_proximity_packet(fake_data)
         
         self.assertIn("AirPods Pro", info['model'])
-        self.assertIn("(SPOOF?)", info['model'])
+        self.assertIn("!!! SPOOF DETECTED !!!", info['model'])
         self.assertEqual(info['bat_L'], "100%")
         self.assertEqual(info['bat_R'], "100%")
 
