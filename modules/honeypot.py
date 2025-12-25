@@ -81,12 +81,13 @@ class HoneyPotModule:
                 case = (random.randint(128, 228),)
                 packet_data = prefix + left + right + case + suffix
 
-                start_le_advertising(self.sock, min_interval=200, max_interval=200, adv_type=ADV_IND, data=packet_data, own_bdaddr_type=0x01)
+              
+                start_le_advertising(self.sock, min_interval=64, max_interval=64, adv_type=ADV_IND, data=packet_data, own_bdaddr_type=0x01)
                 
                 start_time = time.time()
                 connected = False
                 
-                while (time.time() - start_time) < 15:
+                while (time.time() - start_time) < 5:
                     readable, _, _ = select.select([self.sock], [], [], 0.5) 
                     if self.sock in readable:
                         pkt = self.sock.recv(255)
