@@ -75,7 +75,7 @@ class SnifferModule:
         
         return info
 
-    def start_sniff(self, target_mac=None, output_file=None):
+    def start_sniff(self, target_mac=None, output_file=None, callback=None):
         target_str = f" [bold red]TARGETING {target_mac}[/bold red]" if target_mac else ""
         self.log(f"[bold blue][*] Starting Passive Sniffer on hci{self.dev_id}...{target_str}[/bold blue]")
         
@@ -143,6 +143,9 @@ class SnifferModule:
                                     found = self.process_data(data, mac_str, rssi)
                                     if found:
                                         self.update_display(live, found, mac_str, rssi, log_handle)
+                                        if callback:
+                                            # Pass full context to callback
+                                            callback(mac_str, rssi, found)
 
 
 

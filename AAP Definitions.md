@@ -65,6 +65,35 @@ Controls ANC and Transparency.
 
 ---
 
+### 2. Conversational Awareness (Volume Ducking)
+Triggers the "User Speaking" state to lower media volume.
+
+**Opcode**: `0x0009` (Shared Control) or `0x000A` (Direct)
+In this toolkit, we use the specific control command found in logs:
+**Command ID**: `0x0A`
+
+**Packet Format:**
+```plaintext
+04 00 04 00 09 00 0A [State] 00 00 00
+```
+**State**: `0x01` (Speaking), `0x00` (Silent)
+
+---
+
+### 3. Headphone Accommodation (Audiogram)
+Writes custom transparency / equalizer settings.
+
+**Opcode**: `0x0053`
+
+**Packet Format:**
+```plaintext
+04 00 04 00 53 00 [Command] [SubCmd] [Payload...]
+```
+*   **Command**: `0x01` (Write)
+*   **Payload**: CoreAudio binary structure (Gain, Freq, Q-Factor).
+
+---
+
 ### 2. Rename Device
 Sets the display name of the AirPods.
 

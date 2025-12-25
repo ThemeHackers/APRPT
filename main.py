@@ -26,13 +26,16 @@ def main():
         interactive_mode()
     
     parser.add_argument("-t", "--target", help="Target MAC Address (Required for recon/hijack/dos/control)")
-    parser.add_argument("-m", "--mode", help="Mode: recon, hijack, dos, advertise, honeypot, sniff, bleed, control, analyze", choices=["recon", "hijack", "dos", "advertise", "honeypot", "sniff", "bleed", "control", "analyze"])
+
+    parser.add_argument("-m", "--mode", help="Mode: recon, hijack, dos, advertise, honeypot, sniff, bleed, control, analyze, context", choices=["recon", "hijack", "dos", "advertise", "honeypot", "sniff", "bleed", "control", "analyze", "context"])
+    parser.add_argument("-a", "--attack", help="Specific attack for hijack/context mode: duck, audiogram, handover, zone, activity")
     parser.add_argument("-M", "--model", help="Spoof Model Name (e.g. 'AirPods Pro') or ID for advertise mode.")
     parser.add_argument("--log-file", help="Output file for Pattern of Life logs (sniff mode)")
     parser.add_argument("--phishing", action="store_true", help="Enable Phishing Mode (Cycle all models) for advertise mode")
     parser.add_argument("-f", "--file", help="PCAPNG file path for analysis (Required for analyze mode)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable detailed packet inspection (analyze mode)")
     parser.add_argument("--definitions", action="store_true", help="Show opcode definitions table")
+    parser.add_argument("--smart", action="store_true", help="Enable Smart Enhancements (Ghosting, Adaptive, Debounce)")
 
     if os.geteuid() != 0:
         console.print("[red][!] WARNING: Not running as root. APRPT requires sudo for Bluetooth operations.[/red]")
@@ -149,6 +152,19 @@ def run_cli_mode(args):
         module = ControlModule(console=console, target=target_mac)
         module.start_control()
 
+    elif mode == "context":
+        from modules.context_aware import ContextAttackModule
+        module = ContextAttackModule(console=console)
+        if args.attack == "zone":
+            module.start_zone_denial(smart=args.smart)
+        elif args.attack == "activity":
+            if not target_mac:
+                console.print("[red][!] Target required for Activity Trigger.[/red]")
+                return
+            module.start_activity_trigger(target_mac)
+        else:
+            console.print("[red]Please specify --attack zone or --attack activity[/red]")
+
     else:
         if not target_mac:
             console.print("[red][!] Error: Target MAC (-t) is required.[/red]")
@@ -176,7 +192,14 @@ def run_cli_mode(args):
                 module.get_device_info()
             elif mode == "hijack":
                 module = HijackModule(conn, console=console)
-                module.run_smart_routing_hijack()
+                if args.attack == "duck":
+                    module.trigger_volume_ducking(ghost_mode=args.smart)
+                elif args.attack == "audiogram":
+                    module.write_malicious_audiogram(boiling_frog=args.smart)
+                elif args.attack == "handover":
+                    module.start_handover_jamming(adaptive=args.smart)
+                else:
+                    module.run_smart_routing_hijack()
         except KeyboardInterrupt:
             console.print("\n[yellow][!] User interrupted.[/yellow]")
         finally:
@@ -199,7 +222,9 @@ def interactive_mode():
     
     current_module = None
     target_mac = None
-    spoof_model_name = "AirPods Pro" 
+    spoof_model_name = "AirPods Pro"
+    attack_type = None 
+    smart_mode = False
     
     from modules.advertising import AdvertisingModule
     device_data = AdvertisingModule.DEVICE_DATA
@@ -238,7 +263,7 @@ def interactive_mode():
                 if not args:
                     console.print("[red]Usage: use <module>[/red]")
                     continue
-                valid_mods = ["recon", "hijack", "dos", "advertise", "honeypot", "sniff", "bleed", "control"]
+                valid_mods = ["recon", "hijack", "dos", "advertise", "honeypot", "sniff", "bleed", "control", "context"]
                 if args[0] in valid_mods:
                     current_module = args[0]
                     console.print(f"[*] switched to [bold cyan]{current_module}[/bold cyan]")
@@ -261,6 +286,16 @@ def interactive_mode():
                         console.print(f"[*] Model => {spoof_model_name}")
                     else:
                         console.print("[red]Invalid Model ID. Use 'show models' to see list.[/red]")
+                elif param == "attack":
+                    attack_type = val
+                    console.print(f"[*] Attack Type => {attack_type}")
+                elif param == "smart":
+                    if val.lower() == "true":
+                        smart_mode = True
+                        console.print("[green][*] Smart Mode Enabled[/green]")
+                    else:
+                        smart_mode = False
+                        console.print("[yellow][*] Smart Mode Disabled[/yellow]")
                 else:
                     console.print("[red]Unknown parameter.[/red]")
                     
@@ -324,6 +359,19 @@ def interactive_mode():
                              continue
                         mod = ControlModule(console=console, target=target_mac)
                         mod.start_control()
+
+                    elif current_module == "context":
+                        from modules.context_aware import ContextAttackModule
+                        mod = ContextAttackModule(console=console)
+                        if attack_type == "zone":
+                            mod.start_zone_denial(smart=smart_mode)
+                        elif attack_type == "activity":
+                            if not target_mac:
+                                console.print("[red][!] Target required.[/red]")
+                                continue
+                            mod.start_activity_trigger(target_mac)
+                        else:
+                            console.print("[red]Set attack type with 'set attack <zone|activity>'[/red]")
                         
                     else:
                         if not target_mac:
@@ -336,7 +384,15 @@ def interactive_mode():
                                 if current_module == "recon":
                                     ReconModule(conn, console).get_device_info()
                                 elif current_module == "hijack":
-                                    HijackModule(conn, console).run_smart_routing_hijack()
+                                    mod = HijackModule(conn, console)
+                                    if attack_type == "duck":
+                                        mod.trigger_volume_ducking(ghost_mode=smart_mode)
+                                    elif attack_type == "audiogram":
+                                        mod.write_malicious_audiogram(boiling_frog=smart_mode)
+                                    elif attack_type == "handover":
+                                        mod.start_handover_jamming(adaptive=smart_mode)
+                                    else:
+                                        mod.run_smart_routing_hijack()
                                 elif current_module == "dos":
                                     DoSModule(conn, console).l2cap_flood(target_mac)
                             finally:

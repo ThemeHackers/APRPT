@@ -76,6 +76,34 @@ Device Metadata Report:
 *   **Action**: Select Option 6 ("Strobe Mode")
 *   **Result**: Victim experiences rapid Disorienting shifts between ANC (Silence) and Transparency (Noise).
 
+### 🔇 Volume Ducking (Hijack)
+*   **Action**: `-m hijack -a duck`
+*   **Result**: Music volume lowers significantly (Ducking) while active, as if user is speaking.
+*   **Smart (Ghost)**: Volume glitches intermittently (random intervals), mimicking a broken sensor.
+
+### 📉 Malicious Audiogram (Hijack)
+*   **Action**: `-m hijack -a audiogram`
+*   **Result**: Transparency Mode becomes extremely sharp (High-Frequency boost), causing auditory discomfort.
+*   **Smart (Boiling Frog)**: The sharpness increases gradually over 10 seconds.
+
+### 📲 Handover Jamming (Hijack)
+*   **Action**: `-m hijack -a handover`
+*   **Result**: "Move to iPad..." popup appears repeatedly on victim's phone.
+*   **Smart (Adaptive)**: Popups appear at irregular intervals to bypass iOS anti-spam logic.
+
+---
+
+## 🤖 **5. Context-Aware Attacks**
+
+### 🚶 Zone Denial (`-m context -a zone`)
+*   **Console**: `[!] PROXIMITY ALERT: <MAC> (RSSI: -55)`
+*   **Result**: Any Apple device within ~1.5m triggers an immediate disconnect attack.
+*   **Smart**: Only triggers if signal is stable > 3 seconds (No false positives from walking past).
+
+### 🏃 Activity Trigger (`-m context -a activity`)
+*   **Console**: `[dim]Waiting for A2DP...[/dim]` -> `[!] Activity Detected!`
+*   **Result**: Attack (Strobe ANC) fires **only** when the victim puts earbuds in and starts music.
+
 ---
 
 ## ⛔ **5. Availability & DoS**

@@ -56,6 +56,19 @@ This project fuses two distinct research philosophies into one offensive toolkit
 ### 5. **Active Control** (`-m control`)
 *   **Strobe Mode**: Rapidly toggles between ANC and Transparency to clinically disorient the user (Acoustic Attack).
 
+### 6. **Deep Feature Hijacking** (`-m hijack`)
+*   **Malicious Audiogram**: Injects a custom audio profile (Opcode `0x53`) to boost high frequencies, turning Transparency Mode into an acoustic weapon.
+*   **Volume Ducking**: Abuses "Conversation Awareness" to silence media playback remotely.
+
+### 7. **Context-Aware Modules** (`-m context`)
+*   **Zone Denial**: Automatically attacks any device entering a defined RSSI perimeter ("Digital Landmine").
+*   **Activity Trigger**: Lies in wait (Passive Sniff) until a victim puts headphones in (In-Ear Detection) to launch an attack.
+
+### 8. **Smart Enhancements** (`--smart`)
+*   **Ghost Mode**: Randomizes attack patterns (e.g., volume glitches) to mimic hardware failure.
+*   **Boiling Frog**: Gradually ramps up attack intensity (e.g., audiogram gain) to avoid immediate detection.
+*   **Adaptive Jamming**: Varies packet timing to evade simple spam filters.
+
 ---
 
 ## 📦 **Installation**
