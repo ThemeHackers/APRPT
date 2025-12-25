@@ -32,6 +32,7 @@ This project fuses two distinct research philosophies into one offensive toolkit
 | **DoS** | `-m dos` | ⛔ **Availability**: Performs **L2CAP Resource Exhaustion** or Packet Flooding. |
 | **BLE Fuzzer** | `-m bleed` | 🩸 **Stress Test**: Supports Area Bleed or **Targeted Protocol Fuzzing**. |
 | **HoneyPot** | `-m honeypot` | 🕸️ **Trap**: Detects and logs MAC addresses of victims attempting to connect to spoofed signals. |
+| **PCAP Analysis** | `-m analyze` | 🧠 **Forensics**: Deep inspection of key packets (HCI/AAP) & Proximity Pairing decoding. |
 
 ---
 
@@ -73,7 +74,7 @@ sudo apt update && sudo apt install -y bluez libpcap-dev libev-dev libnl-3-dev l
 pip3 install git+https://github.com/pybluez/pybluez.git#egg=pybluez
 
 # Install crypto libs
-pip3 install pycryptodome rich
+pip3 install pycryptodome rich scapy
 ```
 
 ---
@@ -99,6 +100,15 @@ sudo python3 main.py -m sniff -t <TARGET_MAC> --log-file target.csv
 
 # Vulnerability Scan
 sudo python3 main.py -m recon -t <TARGET_MAC>
+```
+
+### 🔎 Forensics & Analysis
+```bash
+# Analyze a PCAPNG file (with Proximity Pairing decoding)
+sudo python3 main.py -m analyze -f <file.pcapng> -v
+
+# View Known Opcode Definitions
+sudo python3 main.py --definitions
 ```
 
 ### 🎮 Side-Channel & Active Control

@@ -1,3 +1,4 @@
 pybluez
 rich
 pycryptodome
+scapy

@@ -26,10 +26,13 @@ def main():
         interactive_mode()
     
     parser.add_argument("-t", "--target", help="Target MAC Address (Required for recon/hijack/dos/control)")
-    parser.add_argument("-m", "--mode", help="Mode: recon, hijack, dos, advertise, honeypot, sniff, bleed, control", choices=["recon", "hijack", "dos", "advertise", "honeypot", "sniff", "bleed", "control"], required=True)
+    parser.add_argument("-m", "--mode", help="Mode: recon, hijack, dos, advertise, honeypot, sniff, bleed, control, analyze", choices=["recon", "hijack", "dos", "advertise", "honeypot", "sniff", "bleed", "control", "analyze"])
     parser.add_argument("-M", "--model", help="Spoof Model Name (e.g. 'AirPods Pro') or ID for advertise mode.")
     parser.add_argument("--log-file", help="Output file for Pattern of Life logs (sniff mode)")
     parser.add_argument("--phishing", action="store_true", help="Enable Phishing Mode (Cycle all models) for advertise mode")
+    parser.add_argument("-f", "--file", help="PCAPNG file path for analysis (Required for analyze mode)")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable detailed packet inspection (analyze mode)")
+    parser.add_argument("--definitions", action="store_true", help="Show opcode definitions table")
 
     if os.geteuid() != 0:
         console.print("[red][!] WARNING: Not running as root. APRPT requires sudo for Bluetooth operations.[/red]")
@@ -37,6 +40,12 @@ def main():
 
     args_parsed = False
     if len(sys.argv) > 1:
+
+        if "--definitions" in sys.argv:
+             from modules.pcap_analyzer import show_definitions
+             show_definitions()
+             sys.exit(0)
+
         args = parser.parse_args()
         args_parsed = True
 
@@ -126,6 +135,14 @@ def run_cli_mode(args):
              module.start_protocol_fuzzing(target_mac)
         else:
              module.start_bleed()
+             
+    elif mode == "analyze":
+        if not args.file:
+            console.print("[red][!] Error: --file (-f) is required for analysis mode.[/red]")
+            return
+        from modules.pcap_analyzer import PcapAnalyzer
+        analyzer = PcapAnalyzer(args.file, verbose=args.verbose)
+        analyzer.analyze()
 
     elif mode == "control":
         from modules.control import ControlModule
@@ -139,13 +156,11 @@ def run_cli_mode(args):
         
         console.print(f"[*] Target: [bold yellow]{target_mac}[/bold yellow]")
         
-        # Connection handling
-        # Note: DoS (L2CAP Flood) creates its own sockets, so we don't need a persistent AAPConnection
+      
         if mode == "dos":
              from modules.denial_of_service import DoSModule
-             # DoSModule expects a connection object in init, but l2cap_flood creates fresh ones.
-             # We pass a dummy connection or handle inside.
-             conn = AAPConnection(target_mac, console=console) # Dummy to satisfy Init
+          
+             conn = AAPConnection(target_mac, console=console) 
              module = DoSModule(conn, console=console)
              module.l2cap_flood(target_mac)
              return
