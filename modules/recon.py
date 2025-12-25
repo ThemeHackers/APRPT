@@ -48,10 +48,12 @@ class ReconModule:
             self.log("[yellow][-] No response to metadata request.[/yellow]")
 
     FIRMWARE_VULNS = {
-        "3A283": ["CVE-2020-9999 (Audio Buffer Overflow)"],
-        "4A400": ["CVE-2021-30883 (Bluetooth Stack Crash)"],
-        "4C165": ["CVE-2022-XXXX (Proximity Pairing Spoof)"],
-        "5B58":  ["CVE-2023-XXXX (Status Byte Leakage)"]
+        "3A283": ["CVE-2021-30883 (Bluetooth Memory Corruption)"],
+        "4A400": ["CVE-2023-27964 (Authentication Bypass - Spoofing)"],
+        "4C165": ["CVE-2023-27964 (Authentication Bypass - Spoofing)"],
+        "5B58":  ["CVE-2024-27867 (Bluetooth Access Bypass)", "CVE-2023-27964"],
+        "5E133": ["CVE-2024-27867 (Bluetooth Access Bypass)"],
+        "6F7":   ["CVE-2024-27867 (Bluetooth Access Bypass)"]
     }
 
     def check_firmware_vulnerability(self, fw_version):

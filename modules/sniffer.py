@@ -83,6 +83,15 @@ class SnifferModule:
         if not self.sock:
             return
 
+        try:
+            flt = bluez.hci_filter_new()
+            bluez.hci_filter_all_events(flt)
+            bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
+            self.sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, flt)
+            self.log("[green][*] HCI Filter set to allow all events.[/green]")
+        except Exception as e:
+            self.log(f"[yellow][!] Failed to set HCI filter: {e}[/yellow]")
+
         enable_le_scan(self.sock, enabled=True)
         
         log_handle = None
@@ -130,55 +139,12 @@ class SnifferModule:
                                     if target_mac and mac_str.lower() != target_mac.lower():
                                         continue
 
-                                    if len(data) > 4 and data[1] == 0xFF and data[2] == 0x4C and data[3] == 0x00:
-                                        subtype = data[4]
-                                        payload = data[5:]
-                                        
-                                        decoded = {}
-                                        if subtype == 0x07:
-                                            decoded = self.decode_proximity_packet(payload)
-                                        elif subtype == 0x10:
-                                            decoded = self.decode_proximity_packet(payload)
-                                            if "model" in decoded:
-                                                decoded["model"] = f"Nearby Info (0x10) - {decoded['model']}"
-                                            else:
-                                                 decoded["model"] = "Nearby Info (0x10)"
-                                        else:
-                                            if target_mac: continue 
-                                            decoded = {"model": f"Other Apple (0x{subtype:02x})"}
-                                            
-                                        now = datetime.datetime.now().strftime("%H:%M:%S")
-                                        
-                                        bat_str = f"{decoded.get('bat_L','?')}/{decoded.get('bat_R','?')}/{decoded.get('bat_C','?')}"
-                                        model_str = decoded.get('model', 'Unknown')
-                                        lid_str = "Yes" if decoded.get('lid_open') else "No"
-                                        status_raw = decoded.get('status_raw', '??')
-                                        
-                                        if log_handle:
-                                            log_line = f"{now},{mac_str},{model_str},{rssi},{status_raw},{decoded.get('bat_L','?')},{decoded.get('bat_R','?')},{decoded.get('bat_C','?')}\n"
-                                            log_handle.write(log_line)
-                                            log_handle.flush()
+                                
+                                    found = self.process_data(data, mac_str, rssi)
+                                    if found:
+                                        self.update_display(live, found, mac_str, rssi, log_handle)
 
-                                        self.devices[mac_str] = {
-                                            "model": model_str,
-                                            "bat": bat_str,
-                                            "lid": lid_str,
-                                            "rssi": str(rssi),
-                                            "seen": now
-                                        }
-                                        
-                                        new_table = Table(title="Apple Devices Detected (Passive Scan)", show_lines=True)
-                                        new_table.add_column("MAC", style="cyan")
-                                        new_table.add_column("Model")
-                                        new_table.add_column("Battery (L/R/C)")
-                                        new_table.add_column("Lid Open")
-                                        new_table.add_column("RSSI", style="green")
-                                        new_table.add_column("Last Seen", style="dim")
-                                        
-                                        for m, d in self.devices.items():
-                                            new_table.add_row(m, d['model'], d['bat'], d['lid'], d['rssi'], d['seen'])
-                                        
-                                        live.update(new_table)
+
 
         except KeyboardInterrupt:
             self.log("\n[yellow][*] Stopping Sniffer...[/yellow]")
@@ -186,3 +152,76 @@ class SnifferModule:
             if log_handle:
                 log_handle.close()
                 self.log(f"[green][+] Log saved to {output_file}[/green]")
+
+    def process_data(self, data, mac_str, rssi):
+        index = 0
+        decoded = None
+        
+        while index < len(data):
+            try:
+                length = data[index]
+                if length == 0: break
+                if index + 1 + length > len(data): break
+                
+                ad_type = data[index+1]
+                ad_data = data[index+2 : index+1+length]
+                
+                if ad_type == 0xFF:
+                    if len(ad_data) >= 2 and ad_data[0] == 0x4C and ad_data[1] == 0x00:
+                        subtype = ad_data[2]
+                        payload = ad_data[3:]
+                        
+                        decoded = {}
+                        if subtype == 0x07:
+                            decoded = self.decode_proximity_packet(payload)
+                        elif subtype == 0x10:
+                            decoded = self.decode_proximity_packet(payload)
+                            if "model" in decoded:
+                                decoded["model"] = f"Nearby ({decoded['model']})"
+                            else:
+                                decoded["model"] = "Nearby Info"
+                        else:
+                            decoded = {"model": f"Apple (0x{subtype:02x})"}
+                        
+                        return decoded
+                
+                index += 1 + length
+                
+            except IndexError:
+                break
+        
+        return None
+
+    def update_display(self, live, decoded, mac_str, rssi, log_handle):
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        
+        bat_str = f"{decoded.get('bat_L','?')}/{decoded.get('bat_R','?')}/{decoded.get('bat_C','?')}"
+        model_str = decoded.get('model', 'Unknown')
+        lid_str = "Yes" if decoded.get('lid_open') else "No"
+        status_raw = decoded.get('status_raw', '??')
+        
+        if log_handle:
+            log_line = f"{now},{mac_str},{model_str},{rssi},{status_raw},{decoded.get('bat_L','?')},{decoded.get('bat_R','?')},{decoded.get('bat_C','?')}\n"
+            log_handle.write(log_line)
+            log_handle.flush()
+
+        self.devices[mac_str] = {
+            "model": model_str,
+            "bat": bat_str,
+            "lid": lid_str,
+            "rssi": str(rssi),
+            "seen": now
+        }
+        
+        new_table = Table(title="Apple Devices Detected (Passive Scan)", show_lines=True)
+        new_table.add_column("MAC", style="cyan")
+        new_table.add_column("Model")
+        new_table.add_column("Battery (L/R/C)")
+        new_table.add_column("Lid Open")
+        new_table.add_column("RSSI", style="green")
+        new_table.add_column("Last Seen", style="dim")
+        
+        for m, d in self.devices.items():
+            new_table.add_row(m, d['model'], d['bat'], d['lid'], d['rssi'], d['seen'])
+        
+        live.update(new_table)
