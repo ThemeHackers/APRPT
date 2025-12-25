@@ -158,7 +158,6 @@ class PcapAnalyzer:
                                          prox_node.add(f"Lid State: {'[green]OPEN[/green]' if lid_open else '[red]CLOSED[/red]'}")
                         except Exception as e:
                              pass
-=
 
             if self.verbose:
                 try:
