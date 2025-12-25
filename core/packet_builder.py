@@ -71,6 +71,13 @@ class ProximityPairingPacket:
     }
 
     @staticmethod
+    def build_legacy_honeypot_packet(left, right, case):
+        
+        prefix = bytes([0x1e, 0xff, 0x4c, 0x00, 0x07, 0x19, 0x01, 0x02, 0x20, 0x75, 0xaa, 0x30, 0x01, 0x00, 0x00, 0x45])
+        suffix = bytes([0xda, 0x29, 0x58, 0xab, 0x8d, 0x29, 0x40, 0x3d, 0x5c, 0x1b, 0x93, 0x3a])
+        return prefix + bytes([left, right, case]) + suffix
+
+    @staticmethod
     def build(model_name="AirPods", 
               battery_left=100, battery_right=100, battery_case=100, 
               charging_left=False, charging_right=False, charging_case=False,
