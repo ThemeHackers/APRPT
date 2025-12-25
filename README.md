@@ -18,6 +18,8 @@ This project fuses two distinct research philosophies into one offensive toolkit
 1.  🎭 **The Phantom (Advertising & Spoofing)**: Mimicking Apple devices to trigger UI popups and "phantom" presence. (Derived from `AppleBLE`)
 2.  ⚔️ **The Aggressor (Active Protocol Control)**: Establishing raw **L2CAP** connections to hijack device state. (Derived from `LibrePods`)
 
+> **Integration Matrix**: APRPT mixes these strands—using "Phantom" logic for Phishing and "Aggressor" logic for Weaponization (e.g., forcing audio switching).
+
 ---
 
 ## 🛠️ **Features & Modes**
@@ -25,7 +27,7 @@ This project fuses two distinct research philosophies into one offensive toolkit
 | Mode | Flag | Functionality |
 | :--- | :--- | :--- |
 | **Advertiser** | `-m advertise` | 📡 **Phishing / Spoofing**: Broadcasts fake "Proximity Pairing" signals. Supports **Phishing Mode** (Cycle Models). |
-| **Passive Sniffer** | `-m sniff` | 🕵️ **Surveillance**: Decodes nearby advertisements. Supports **Targeted Pattern of Life** logging. |
+| **Passive Sniffer** | `-m sniff` | 🕵️ **Surveillance**: Decodes nearby advertisements. Supports **Targeted Pattern of Life** logging & **Spoof Detection**. |
 | **Reconnaissance** | `-m recon` | 🔍 **Intel**: Connects & extracts Serial Numbers, Firmware, and **Scans for known CVEs**. |
 | **Hijack** | `-m hijack` | 🔀 **Control**: Forces target AirPods to switch audio routing to the attacker's machine. |
 | **Active Control** | `-m control` | 🎮 **Manipulation**: **Rename Devices**, **Strobe ANC**, or monitor **Head Tracking** via L2CAP. |
@@ -33,6 +35,7 @@ This project fuses two distinct research philosophies into one offensive toolkit
 | **BLE Fuzzer** | `-m bleed` | 🩸 **Stress Test**: Supports Area Bleed or **Targeted Protocol Fuzzing**. |
 | **HoneyPot** | `-m honeypot` | 🕸️ **Trap**: Detects and logs MAC addresses of victims attempting to connect to spoofed signals. |
 | **PCAP Analysis** | `-m analyze` | 🧠 **Forensics**: Deep inspection of key packets (HCI/AAP) & Proximity Pairing decoding. |
+| **Context Aware** | `-m context` | 📍 **Automation**: Triggers attacks based on environmental triggers like RSSI zones or activity state. |
 
 ---
 
@@ -40,6 +43,7 @@ This project fuses two distinct research philosophies into one offensive toolkit
 
 ### 1. **Advanced Reconnaissance** (`-m sniff` / `-m recon`)
 *   **Targeted Tracking**: Filters traffic for a specific MAC and logs RSSI/Status history to CSV for Pattern of Life analysis.
+*   **Spoof Detection**: Identifies devices broadcasting "Pairing Mode" flags suspiciously, indicating a potential ongoing spoofing attack.
 *   **Firmware Scanner**: Automatically checks extracted firmware versions against a local database of mock vulnerabilities (CVEs).
 
 ### 2. **Social Engineering** (`-m advertise` / `-m control`)
@@ -59,6 +63,7 @@ This project fuses two distinct research philosophies into one offensive toolkit
 ### 6. **Deep Feature Hijacking** (`-m hijack`)
 *   **Malicious Audiogram**: Injects a custom audio profile (Opcode `0x53`) to boost high frequencies, turning Transparency Mode into an acoustic weapon.
 *   **Volume Ducking**: Abuses "Conversation Awareness" to silence media playback remotely.
+*   **Handover Jamming**: Exploits the Magic Switch feature to aggressively force a handover to the attacker.
 
 ### 7. **Context-Aware Modules** (`-m context`)
 *   **Zone Denial**: Automatically attacks any device entering a defined RSSI perimeter ("Digital Landmine").
@@ -105,6 +110,9 @@ sudo python3 main.py -m advertise --phishing
 sudo python3 main.py -m control -t <TARGET_MAC>
 # Select Option 4 in the menu
 ```
+> **Physical Result**:
+> *   **Phishing**: Victim receives a barrage of "Not Your AirPods" popups.
+> *   **Rename**: Target device name changes in Bluetooth settings to "Connection Failed".
 
 ### 🕵️ Advanced Recon
 ```bash
@@ -114,6 +122,9 @@ sudo python3 main.py -m sniff -t <TARGET_MAC> --log-file target.csv
 # Vulnerability Scan
 sudo python3 main.py -m recon -t <TARGET_MAC>
 ```
+> **Physical Result**:
+> *   **Sniffer**: `pol.csv` created with specific RSSI/Status history.
+> *   **Recon**: Console alerts on "VULNERABILITY DETECTED" if firmware matches known CVEs.
 
 ### 🔎 Forensics & Analysis
 ```bash
@@ -131,6 +142,9 @@ sudo python3 main.py -m control -t <TARGET_MAC>
 # 5. Head Tracking Monitor
 # 6. Strobe Mode (Disorient)
 ```
+> **Physical Result**:
+> *   **Strobe**: Victim hears rapid switching between Silence (ANC) and Noise (Transparency).
+> *   **Head Tracking**: Console logs real-time XYZ coordinates of the user's head.
 
 ### 🩸 Availability / DoS
 ```bash
@@ -140,11 +154,25 @@ sudo python3 main.py -m dos -t <TARGET_MAC>
 # Targeted Protocol Fuzzing
 sudo python3 main.py -m bleed -t <TARGET_MAC>
 ```
+> **Physical Result**:
+> *   **DoS**: Target device cannot connect to iPhone; user sees "Connection Failed".
+> *   **Bleed**: Target headphones may reboot, disconnect, or stop audio.
 
 ### 🕸️ Victim Trap (HoneyPot)
 ```bash
 sudo python3 main.py -m honeypot
 ```
+> **Physical Result**:
+> *   **Victim**: iPhone gets stuck on **"Hold Button"** screen.
+> *   **Attacker**: Successfully logs the victim's MAC address.
+
+---
+
+## 🚧 **System Limitations**
+
+1.  **The "Hold Button" Barrier**: When using HoneyPot, the victim's iPhone will get stuck on the "Hold Button" screen. We cannot proceed to "Pairing Success" because generic Bluetooth dongles lack the proprietary Apple W1/H1 chips required for the cryptographic handshake.
+2.  **Single Adapter Blindness**: You cannot sniff your own packets. If running `-m advertise` and `-m sniff` on the same machine with one adapter (`hci0`), the sniffer will show nothing. Use a second device to test.
+3.  **Zero-Trust Access**: We can hijack audio *routing* (force them to hear us), but we cannot hear *their* microphone or access their iCloud settings due to missing Link Keys.
 
 ---
 
