@@ -44,6 +44,8 @@ class DoSModule:
         self.log("[bold green][*] Flood complete.[/bold green]")
 
     def l2cap_flood(self, target_mac, max_conns=50):
+        # Requires -t/--target to be specified
+
         self.log(f"[bold red][*] Starting L2CAP Resource Exhaustion against {target_mac}...[/bold red]")
         sockets = []
         import socket

@@ -25,7 +25,7 @@ def main():
     if len(sys.argv) == 1:
         interactive_mode()
     
-    parser.add_argument("-t", "--target", help="Target MAC Address (Required for recon/hijack/dos/control)")
+    parser.add_argument("-t", "--target", help="Target MAC Address (Required for recon/hijack/dos/control/context)")
 
     parser.add_argument("-m", "--mode", help="Mode: recon, hijack, dos, advertise, honeypot, sniff, bleed, control, analyze, context", choices=["recon", "hijack", "dos", "advertise", "honeypot", "sniff", "bleed", "control", "analyze", "context"])
     parser.add_argument("-a", "--attack", help="Specific attack for hijack/context mode: duck, audiogram, handover, zone, activity")
