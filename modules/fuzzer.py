@@ -52,3 +52,33 @@ class FuzzerModule:
         except KeyboardInterrupt:
             self.log("[yellow][*] Stopping Fuzzer...[/yellow]")
             stop_le_advertising(self.sock)
+
+    def start_protocol_fuzzing(self, target_mac):
+        self.log(f"[bold red][*] Starting Protocol Fuzzer against {target_mac} (PSM 0x1001)...[/bold red]")
+        import socket
+        
+        try:
+            sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_SEQPACKET, socket.BTPROTO_L2CAP)
+            sock.connect((target_mac, 0x1001))
+            self.log("[green][+] Connected to Control Channel.[/green]")
+            
+            count = 0
+            while True:
+                opcode = random.randint(0, 0xFF)
+                length = random.randint(0, 255)
+                payload = os.urandom(length)
+                
+                header = bytes([random.randint(0, 5), 0x00])
+                
+                packet = header + bytes([opcode]) + payload
+                
+                sock.send(packet)
+                count += 1
+                if count % 10 == 0:
+                    self.log(f"[yellow] sent {count} fuzz packets...[/yellow]")
+                time.sleep(0.05)
+                
+        except Exception as e:
+            self.log(f"[red][!] Connection lost or error: {e}[/red]")
+        except KeyboardInterrupt:
+            self.log("\n[yellow][*] Stopping Protocol Fuzzer...[/yellow]")

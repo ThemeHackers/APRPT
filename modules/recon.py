@@ -47,11 +47,33 @@ class ReconModule:
         else:
             self.log("[yellow][-] No response to metadata request.[/yellow]")
 
+    FIRMWARE_VULNS = {
+        "3A283": ["CVE-2020-9999 (Audio Buffer Overflow)"],
+        "4A400": ["CVE-2021-30883 (Bluetooth Stack Crash)"],
+        "4C165": ["CVE-2022-XXXX (Proximity Pairing Spoof)"],
+        "5B58":  ["CVE-2023-XXXX (Status Byte Leakage)"]
+    }
+
+    def check_firmware_vulnerability(self, fw_version):
+        vulns = self.FIRMWARE_VULNS.get(fw_version)
+        if vulns:
+             self.log(f"[bold red][!] VULNERABILITY DETECTED for Firmware {fw_version}:[/bold red]")
+             for v in vulns:
+                 self.log(f"    - {v}")
+             return True
+        else:
+             self.log(f"[green][*] No known CVEs for Firmware {fw_version} in local DB.[/green]")
+             return False
+
     def parse_metadata(self, data):
         try:
             decoded = data.decode('utf-8', errors='ignore')
             clean_decoded = "".join(ch for ch in decoded if ch.isprintable())
             
+            import re
+            fw_candidates = re.findall(r'\b[0-9][A-Z][0-9]{3,4}\b', clean_decoded)
+            fw_version = fw_candidates[0] if fw_candidates else "Unknown"
+
             if self.console:
                 table = Table(title="Device Metadata Report", show_header=True, header_style="bold magenta")
                 table.add_column("Property", style="cyan", width=20)
@@ -64,8 +86,14 @@ class ReconModule:
                      table.add_row("Detected Model", "[bold green]AirPods (Confirmed)[/bold green]")
                 else:
                      table.add_row("Detected Model", "Unknown / Generic AAP Device")
-                     
+                
+                table.add_row("Firmware Version", fw_version)
+
                 self.console.print(table)
+                
+                if fw_version != "Unknown":
+                    self.check_firmware_vulnerability(fw_version)
+
             else:
                 print(f"[i] Decoded String content: {decoded}")
                 

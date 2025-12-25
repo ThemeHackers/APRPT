@@ -28,6 +28,8 @@ def main():
     parser.add_argument("-t", "--target", help="Target MAC Address (Required for recon/hijack/dos/control)")
     parser.add_argument("-m", "--mode", help="Mode: recon, hijack, dos, advertise, honeypot, sniff, bleed, control", choices=["recon", "hijack", "dos", "advertise", "honeypot", "sniff", "bleed", "control"], required=True)
     parser.add_argument("-M", "--model", help="Spoof Model Name (e.g. 'AirPods Pro') or ID for advertise mode.")
+    parser.add_argument("--log-file", help="Output file for Pattern of Life logs (sniff mode)")
+    parser.add_argument("--phishing", action="store_true", help="Enable Phishing Mode (Cycle all models) for advertise mode")
 
     if os.geteuid() != 0:
         console.print("[red][!] WARNING: Not running as root. APRPT requires sudo for Bluetooth operations.[/red]")
@@ -67,6 +69,10 @@ def run_cli_mode(args):
         
         module = AdvertisingModule(console=console)
         device_data = AdvertisingModule.DEVICE_DATA
+
+        if args.phishing:
+            module.start_spoof(phishing_mode=True)
+            return
 
         if args.model:
             found_id = None
@@ -111,12 +117,15 @@ def run_cli_mode(args):
     elif mode == "sniff":
         from modules.sniffer import SnifferModule
         module = SnifferModule(console=console)
-        module.start_sniff()
+        module.start_sniff(target_mac=target_mac, output_file=args.log_file)
 
     elif mode == "bleed":
         from modules.fuzzer import FuzzerModule
         module = FuzzerModule(console=console)
-        module.start_bleed()
+        if target_mac:
+             module.start_protocol_fuzzing(target_mac)
+        else:
+             module.start_bleed()
 
     elif mode == "control":
         from modules.control import ControlModule
@@ -129,6 +138,18 @@ def run_cli_mode(args):
             return
         
         console.print(f"[*] Target: [bold yellow]{target_mac}[/bold yellow]")
+        
+        # Connection handling
+        # Note: DoS (L2CAP Flood) creates its own sockets, so we don't need a persistent AAPConnection
+        if mode == "dos":
+             from modules.denial_of_service import DoSModule
+             # DoSModule expects a connection object in init, but l2cap_flood creates fresh ones.
+             # We pass a dummy connection or handle inside.
+             conn = AAPConnection(target_mac, console=console) # Dummy to satisfy Init
+             module = DoSModule(conn, console=console)
+             module.l2cap_flood(target_mac)
+             return
+
         conn = AAPConnection(target_mac, console=console)
         if not conn.connect():
             console.print("[red][!] Failed to establish connection. Exiting.[/red]")
@@ -141,9 +162,6 @@ def run_cli_mode(args):
             elif mode == "hijack":
                 module = HijackModule(conn, console=console)
                 module.run_smart_routing_hijack()
-            elif mode == "dos":
-                module = DoSModule(conn, console=console)
-                module.start_flood()
         except KeyboardInterrupt:
             console.print("\n[yellow][!] User interrupted.[/yellow]")
         finally:
@@ -279,7 +297,10 @@ def interactive_mode():
                     elif current_module == "bleed":
                         from modules.fuzzer import FuzzerModule
                         mod = FuzzerModule(console=console)
-                        mod.start_bleed()
+                        if target_mac:
+                             mod.start_protocol_fuzzing(target_mac)
+                        else:
+                             mod.start_bleed()
                         
                     elif current_module == "control":
                         from modules.control import ControlModule
@@ -302,7 +323,7 @@ def interactive_mode():
                                 elif current_module == "hijack":
                                     HijackModule(conn, console).run_smart_routing_hijack()
                                 elif current_module == "dos":
-                                    DoSModule(conn, console).start_flood()
+                                    DoSModule(conn, console).l2cap_flood(target_mac)
                             finally:
                                 conn.close()
                                 

@@ -76,8 +76,6 @@ class ProximityPairingPacket:
               charging_left=False, charging_right=False, charging_case=False,
               lid_open=True, color=0x00, subtype=0x07):
         
-        # Subtype 0x07 = Proximity Pairing
-        # Subtype 0x10 = Nearby Info (Battery Status)
         prefix = bytes([subtype, 0x19])
         pairing_mode = b'\x01'
         model_bytes = bytes(ProximityPairingPacket.MODELS.get(model_name, (0x02, 0x20)))

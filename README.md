@@ -24,36 +24,36 @@ This project fuses two distinct research philosophies into one offensive toolkit
 
 | Mode | Flag | Functionality |
 | :--- | :--- | :--- |
-| **Advertiser** | `-m advertise` | 📡 **Spoofing**: Broadcasts fake "Proximity Pairing" signals to trigger popups on nearby iOS devices. |
-| **Passive Sniffer** | `-m sniff` | 🕵️ **Surveillance**: Decodes nearby Apple advertisements (Battery, Model, Lid Status) *without connecting*. |
-| **Reconnaissance** | `-m recon` | 🔍 **Intel**: Connects & extracts Serial Numbers, Firmware Versions via standard AAP. |
+| **Advertiser** | `-m advertise` | 📡 **Phishing / Spoofing**: Broadcasts fake "Proximity Pairing" signals. Supports **Phishing Mode** (Cycle Models). |
+| **Passive Sniffer** | `-m sniff` | 🕵️ **Surveillance**: Decodes nearby advertisements. Supports **Targeted Pattern of Life** logging. |
+| **Reconnaissance** | `-m recon` | 🔍 **Intel**: Connects & extracts Serial Numbers, Firmware, and **Scans for known CVEs**. |
 | **Hijack** | `-m hijack` | 🔀 **Control**: Forces target AirPods to switch audio routing to the attacker's machine. |
-| **Active Control** | `-m control` | 🎮 **Manipulation**: Toggles **ANC / Transparency** modes or renames devices via L2CAP. |
-| **DoS** | `-m dos` | ⛔ **Denial of Service**: Floods standard AAP commands to crash the firmware. |
-| **BLE Fuzzer** | `-m bleed` | 🩸 **Stress Test**: Floods the environment with malformed/oversized packets. |
+| **Active Control** | `-m control` | 🎮 **Manipulation**: **Rename Devices**, **Strobe ANC**, or monitor **Head Tracking** via L2CAP. |
+| **DoS** | `-m dos` | ⛔ **Availability**: Performs **L2CAP Resource Exhaustion** or Packet Flooding. |
+| **BLE Fuzzer** | `-m bleed` | 🩸 **Stress Test**: Supports Area Bleed or **Targeted Protocol Fuzzing**. |
 | **HoneyPot** | `-m honeypot` | 🕸️ **Trap**: Detects and logs MAC addresses of victims attempting to connect to spoofed signals. |
 
 ---
 
-## 🔬 **Technical Deep Dive**
+## 🔬 **Technical Deep Dive & New Features**
 
-### 1. **Advertise Mode** (`-m advertise`)
-*   **Mechanism**: Raw HCI commands to broadcast Manufacturer Specific Data (`0x004C`).
-*   **Payload**: Uses Beacon Type `0x07` (Proximity Pairing) to mimic AirPods.
-*   **Effect**: Triggers the "Not Your AirPods" setup animation on iOS.
+### 1. **Advanced Reconnaissance** (`-m sniff` / `-m recon`)
+*   **Targeted Tracking**: Filters traffic for a specific MAC and logs RSSI/Status history to CSV for Pattern of Life analysis.
+*   **Firmware Scanner**: Automatically checks extracted firmware versions against a local database of mock vulnerabilities (CVEs).
 
-### 2. **Passive Sniffer** (`-m sniff`)
-*   **Mechanism**: Promiscuous BLE scanning + Bitwise decoding of `0x07` payloads.
-*   **Capabilities**:
-    *   🔋 Battery Levels (L/R/Case)
-    *   🎧 Device Model Identification
-    *   🚨 **Spoof Detection**: Flags devices broadcasting "Pairing" bits suspiciously.
+### 2. **Social Engineering** (`-m advertise` / `-m control`)
+*   **Phishing Mode**: Rapidly cycles through all device models to flood nearby users with "Not Your AirPods" popups.
+*   **Device Renaming**: Uses L2CAP Opcode `0x1A` to permanently rename a target device (e.g., "Connection Failed"), a persistent deception attack.
 
-### 3. **Active Control** (`-m control`)
-*   **Mechanism**: Connects to **L2CAP PSM 0x1001**.
-*   **Attack**: Sends AAP `Opcode 0x09` (Control Command).
-    *   *Force Transparency*: Disable ANC against user will.
-    *   *Force ANC*: Isolate user from environment.
+### 3. **Availability & DoS** (`-m dos` / `-m bleed`)
+*   **L2CAP Flood**: Exhausts the target's connection handles by opening maximal parallel L2CAP sockets.
+*   **Protocol Fuzzing**: Targets PSM `0x1001` with randomized AAP headers and payloads to trigger stack crashes.
+
+### 4. **Side-Channel Analysis** (`-m control`)
+*   **Head Tracking Monitor**: Intercepts Opcode `0x17` packets to real-time monitor the user's head movement (Privacy Leak).
+
+### 5. **Active Control** (`-m control`)
+*   **Strobe Mode**: Rapidly toggles between ANC and Transparency to clinically disorient the user (Acoustic Attack).
 
 ---
 
@@ -82,39 +82,40 @@ pip3 install pycryptodome rich
 
 **Note**: All commands require **ROOT** privileges (`sudo`) for raw socket access.
 
-### 📡 Spoofing (Visual Spam)
+### 📡 Social Engineering
 ```bash
-sudo python3 main.py -m advertise
-# Or specific model:
-sudo python3 main.py -m advertise -M "AirPods Max"
+# Phishing Mode (Cycle detailed models)
+sudo python3 main.py -m advertise --phishing
+
+# Rename Device (Persistent)
+sudo python3 main.py -m control -t <TARGET_MAC>
+# Select Option 4 in the menu
 ```
 
-### 🕵️ Passive Surveillance
+### 🕵️ Advanced Recon
 ```bash
-sudo python3 main.py -m sniff
-```
+# Pattern of Life Logging
+sudo python3 main.py -m sniff -t <TARGET_MAC> --log-file target.csv
 
-### 🔍 Recon & Hijack (Legacy)
-```bash
-# Get Info targeting specific device
+# Vulnerability Scan
 sudo python3 main.py -m recon -t <TARGET_MAC>
-
-# Hijack Audio Routing
-sudo python3 main.py -m hijack -t <TARGET_MAC>
 ```
 
-### 🎮 Active Control (New Hijack)
+### 🎮 Side-Channel & Active Control
 ```bash
 sudo python3 main.py -m control -t <TARGET_MAC>
+# Options:
+# 5. Head Tracking Monitor
+# 6. Strobe Mode (Disorient)
 ```
 
-### 🩸 Fuzzing / DoS
+### 🩸 Availability / DoS
 ```bash
-# Protocol DoS (Targeted)
+# L2CAP Resource Exhaustion
 sudo python3 main.py -m dos -t <TARGET_MAC>
 
-# BLE Fuzzer (Area Effect)
-sudo python3 main.py -m bleed
+# Targeted Protocol Fuzzing
+sudo python3 main.py -m bleed -t <TARGET_MAC>
 ```
 
 ### 🕸️ Victim Trap (HoneyPot)

