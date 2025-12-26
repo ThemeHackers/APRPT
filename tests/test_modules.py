@@ -1,6 +1,10 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import sys
+import os
+
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 sys.modules['bluetooth'] = MagicMock()
 sys.modules['bluetooth._bluetooth'] = MagicMock()
@@ -14,16 +18,16 @@ class TestModules(unittest.TestCase):
 
     def setUp(self):
         self.mock_conn = MagicMock(spec=AAPConnection)
-        self.mock_conn.sock = MagicMock() # Simulate connected
+        self.mock_conn.sock = MagicMock() 
         self.mock_conn.send.return_value = True
 
     def test_recon_flow(self):
         module = ReconModule(self.mock_conn)
         
         self.mock_conn.receive.side_effect = [
-            b'\x00\x00', # Handshake ack
-            b'\x00\x00', # Sub ack
-            b'...Name:AirPods...' # Metadata
+            b'\x00\x00', 
+            b'\x00\x00', 
+            b'...Name:AirPods...' 
         ]
         
         module.get_device_info()
@@ -45,12 +49,12 @@ class TestModules(unittest.TestCase):
         
         args1, _ = self.mock_conn.send.call_args_list[0]
         pkt1 = args1[0]
-        self.assertEqual(pkt1[4:6], b'\x09\x00') # Opcode 9
-        self.assertEqual(pkt1[6], 0x06)          # Identifier 0x06
+        self.assertEqual(pkt1[4:6], b'\x09\x00')
+        self.assertEqual(pkt1[6], 0x06)          
 
         args2, _ = self.mock_conn.send.call_args_list[1]
         pkt2 = args2[0]
-        self.assertEqual(pkt2[6], 0x20)          # Identifier 0x20
+        self.assertEqual(pkt2[6], 0x20)         
 
 if __name__ == '__main__':
     unittest.main()
