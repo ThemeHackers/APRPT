@@ -1,6 +1,7 @@
 import time
 import random
 from core.hci_wrapper import start_le_advertising, stop_le_advertising, open_dev
+from modules.reset import reset_adapter
 from core.packet_builder import ProximityPairingPacket
 
 class AdvertisingModule:
@@ -107,4 +108,4 @@ class AdvertisingModule:
                  lid_open=True 
              )
         except:
-             return (0x1e, 0xff, 0x4c, 0x00, 0x07) # Fallback truncated
+             return (0x1e, 0xff, 0x4c, 0x00, 0x07) 

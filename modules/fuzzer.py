@@ -2,6 +2,7 @@ import time
 import random
 import os
 from core.hci_wrapper import start_le_advertising, stop_le_advertising, open_dev
+from modules.reset import reset_adapter
 
 class FuzzerModule:
     def __init__(self, console=None, dev_id=0):
@@ -35,6 +36,9 @@ class FuzzerModule:
 
     def start_bleed(self):
         self.log(f"[bold red][*] Starting BLE Fuzzer (Bleed) on hci{self.dev_id}...[/bold red]")
+        
+        reset_adapter(self.dev_id, self.console)
+        
         self.sock = open_dev(self.dev_id)
         if not self.sock:
             return
@@ -55,6 +59,7 @@ class FuzzerModule:
 
     def start_protocol_fuzzing(self, target_mac):
         self.log(f"[bold red][*] Starting Protocol Fuzzer against {target_mac} (PSM 0x1001)...[/bold red]")
+        reset_adapter(self.dev_id, self.console)
         import socket
         
         try:

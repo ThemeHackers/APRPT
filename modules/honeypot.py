@@ -1,3 +1,4 @@
+import os
 import time
 import struct
 import random
@@ -5,6 +6,7 @@ import socket
 import select
 from core.hci_wrapper import start_le_advertising, stop_le_advertising, open_dev, ADV_IND, OGF_LE_CTL, OCF_LE_SET_ADVERTISE_ENABLE
 import bluetooth._bluetooth as bluez
+from modules.reset import reset_adapter
 from rich.panel import Panel
 
 class HoneyPotModule:
@@ -21,6 +23,8 @@ class HoneyPotModule:
 
     def start_honeypot(self):
         self.log(f"[bold red][*] Starting HoneyPot Mode on hci{self.dev_id}...[/bold red]")
+        
+        reset_adapter(self.dev_id, self.console)
         
         self.sock = open_dev(self.dev_id)
         if not self.sock:
@@ -111,6 +115,42 @@ class HoneyPotModule:
                                         import datetime
                                         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                                         f.write(f"{timestamp}, {mac_str}, HANDLE={handle}\n")
+                                except Exception as e:
+                                    self.log(f"[red][!] logging error: {e}[/red]")
+                                
+                                stop_le_advertising(self.sock)
+                                connected = True
+                                
+                                self.log(f"[bold red][*] Holding Connection with {mac_str} (Ctrl+C to stop)...[/bold red]")
+                                
+                                try:
+                                    while True:
+                                        readable, _, _ = select.select([self.sock], [], [], 1)
+                                        if self.sock in readable:
+                                            pkt = self.sock.recv(255)
+                                except KeyboardInterrupt:
+                                    raise
+                                
+                                break 
+
+                        elif event_code == 0x03:
+                            status = pkt[3]
+                            handle = struct.unpack("<H", pkt[4:6])[0]
+                            peer_bdaddr = pkt[6:12]
+                            mac_str = ':'.join('%02x' % b for b in reversed(peer_bdaddr))
+                            
+                            if status == 0x00:
+                                victim_msg = f"[bold red]VICTIM CONNECTED (Legacy)![/bold red]\nMAC: [yellow]{mac_str}[/yellow]\nHandle: {handle}\n[bold green] STATUS: LOCKED ON [/bold green]"
+                                if self.console:
+                                    self.console.print(Panel(victim_msg, title="HoneyPot Alert (0x03)", border_style="red"))
+                                else:
+                                    print(f"\n[!] VICTIM CONNECTED (Legacy): {mac_str} (LOCKED)")
+
+                                try:
+                                    with open("honeypot.log", "a") as f:
+                                        import datetime
+                                        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                        f.write(f"{timestamp}, {mac_str}, HANDLE={handle}, TYPE=0x03\n")
                                 except Exception as e:
                                     self.log(f"[red][!] logging error: {e}[/red]")
                                 

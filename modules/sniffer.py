@@ -5,6 +5,7 @@ import bluetooth._bluetooth as bluez
 from rich.table import Table
 from rich.live import Live
 from core.hci_wrapper import open_dev, enable_le_scan
+from modules.reset import reset_adapter
 
 class SnifferModule:
     def __init__(self, console=None, dev_id=0):
@@ -79,6 +80,8 @@ class SnifferModule:
         target_str = f" [bold red]TARGETING {target_mac}[/bold red]" if target_mac else ""
         self.log(f"[bold blue][*] Starting Passive Sniffer on hci{self.dev_id}...{target_str}[/bold blue]")
         
+        reset_adapter(self.dev_id, self.console)
+        
         self.sock = open_dev(self.dev_id)
         if not self.sock:
             return
@@ -144,7 +147,7 @@ class SnifferModule:
                                     if found:
                                         self.update_display(live, found, mac_str, rssi, log_handle)
                                         if callback:
-                                            # Pass full context to callback
+                                      
                                             callback(mac_str, rssi, found)
 
 

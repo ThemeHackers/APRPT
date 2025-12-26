@@ -9,6 +9,7 @@ from modules.recon import ReconModule
 from modules.hijack import HijackModule
 from modules.denial_of_service import DoSModule
 from modules.control import ControlModule
+from modules.reset import reset_adapter
 
 console = Console()
 
@@ -175,12 +176,14 @@ def run_cli_mode(args):
       
         if mode == "dos":
              from modules.denial_of_service import DoSModule
-          
+           
+             reset_adapter(0, console)
              conn = AAPConnection(target_mac, console=console) 
              module = DoSModule(conn, console=console)
              module.l2cap_flood(target_mac)
              return
 
+        reset_adapter(0, console)
         conn = AAPConnection(target_mac, console=console)
         if not conn.connect():
             console.print("[red][!] Failed to establish connection. Exiting.[/red]")
@@ -378,6 +381,7 @@ def interactive_mode():
                              console.print("[red][!] Target required. 'set target <MAC>'[/red]")
                              continue
                         
+                        reset_adapter(0, console)
                         conn = AAPConnection(target_mac, console=console)
                         if conn.connect():
                             try:

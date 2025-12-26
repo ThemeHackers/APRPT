@@ -3,6 +3,7 @@ import sys
 import socket
 import time
 from rich.console import Console
+from modules.reset import reset_adapter
 
 class ControlModule:
     def __init__(self, console=None, dev_id=0, target=None):
@@ -99,6 +100,7 @@ class ControlModule:
             self.log("[yellow]Strobe stopped.[/yellow]")
 
     def start_control(self):
+        reset_adapter(self.dev_id, self.console)
         if not self.connect():
             return
             
