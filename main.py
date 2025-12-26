@@ -124,7 +124,7 @@ def run_cli_mode(args):
 
     elif mode == "honeypot":
         from modules.honeypot import HoneyPotModule
-        module = HoneyPotModule(console=console)
+        module = HoneyPotModule(console=console, target_mac=target_mac)
         module.start_honeypot()
 
     elif mode == "sniff":
@@ -339,7 +339,7 @@ def interactive_mode():
                         
                     elif current_module == "honeypot":
                         from modules.honeypot import HoneyPotModule
-                        mod = HoneyPotModule(console=console)
+                        mod = HoneyPotModule(console=console, target_mac=target_mac)
                         mod.start_honeypot()
 
                     elif current_module == "sniff":

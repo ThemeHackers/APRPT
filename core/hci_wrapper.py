@@ -10,6 +10,9 @@ OCF_LE_SET_ADVERTISING_DATA = 0x0008
 ADV_NONCONN_IND = 0x03
 ADV_IND = 0x00
 
+OGF_LINK_CTL = 0x01
+OCF_DISCONNECT = 0x0006
+
 def set_random_le_address(sock, addr_bytes):
     cmd_pkt = struct.pack("<6B", *addr_bytes)
     bluez.hci_send_cmd(sock, OGF_LE_CTL, OCF_LE_SET_RANDOM_ADDRESS, cmd_pkt)
@@ -70,3 +73,7 @@ def open_dev(dev_id=0):
     except Exception as e:
         print(f"[!] Failed to open Bluetooth device hci{dev_id}: {e}")
         return None
+
+def disconnect_handle(sock, handle, reason=0x13):
+    cmd_pkt = struct.pack("<HB", handle, reason)
+    bluez.hci_send_cmd(sock, OGF_LINK_CTL, OCF_DISCONNECT, cmd_pkt)

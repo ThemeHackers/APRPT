@@ -4,16 +4,17 @@ import struct
 import random
 import socket
 import select
-from core.hci_wrapper import start_le_advertising, stop_le_advertising, open_dev, ADV_IND, OGF_LE_CTL, OCF_LE_SET_ADVERTISE_ENABLE
+from core.hci_wrapper import start_le_advertising, stop_le_advertising, open_dev, ADV_IND, OGF_LE_CTL, OCF_LE_SET_ADVERTISE_ENABLE, disconnect_handle
 import bluetooth._bluetooth as bluez
 from modules.reset import reset_adapter
 from rich.panel import Panel
 
 class HoneyPotModule:
-    def __init__(self, dev_id=0, console=None):
+    def __init__(self, dev_id=0, console=None, target_mac=None):
         self.dev_id = dev_id
         self.sock = None
         self.console = console
+        self.target_mac = target_mac
 
     def log(self, message):
         if self.console:
@@ -103,7 +104,13 @@ class HoneyPotModule:
                             peer_bdaddr = pkt[9:15]
                             mac_str = ':'.join('%02x' % b for b in reversed(peer_bdaddr))
                             
+                            
                             if status == 0x00:
+                                if self.target_mac and mac_str.lower() != self.target_mac.lower():
+                                     self.log(f"[yellow][!] Filtering: {mac_str} does not match target {self.target_mac}. Disconnecting...[/yellow]")
+                                     disconnect_handle(self.sock, handle)
+                                     break
+
                                 victim_msg = f"[bold red]VICTIM CONNECTED![/bold red]\nMAC: [yellow]{mac_str}[/yellow]\nHandle: {handle}\n[bold green] STATUS: LOCKED ON [/bold green]"
                                 if self.console:
                                     self.console.print(Panel(victim_msg, title="HoneyPot Alert", border_style="red"))
@@ -140,6 +147,11 @@ class HoneyPotModule:
                             mac_str = ':'.join('%02x' % b for b in reversed(peer_bdaddr))
                             
                             if status == 0x00:
+                                if self.target_mac and mac_str.lower() != self.target_mac.lower():
+                                     self.log(f"[yellow][!] Filtering: {mac_str} does not match target {self.target_mac}. Disconnecting...[/yellow]")
+                                     disconnect_handle(self.sock, handle)
+                                     break
+
                                 victim_msg = f"[bold red]VICTIM CONNECTED (Legacy)![/bold red]\nMAC: [yellow]{mac_str}[/yellow]\nHandle: {handle}\n[bold green] STATUS: LOCKED ON [/bold green]"
                                 if self.console:
                                     self.console.print(Panel(victim_msg, title="HoneyPot Alert (0x03)", border_style="red"))
