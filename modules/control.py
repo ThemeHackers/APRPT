@@ -1,9 +1,10 @@
 import struct
 import sys
-import socket
 import time
 from rich.console import Console
 from modules.reset import reset_adapter
+from apybluez.apple.socket import AAPSocket
+from apybluez.exceptions import AAPConnectionError
 
 class ControlModule:
     def __init__(self, console=None, dev_id=0, target=None):
@@ -23,21 +24,20 @@ class ControlModule:
         self.log(f"[bold blue][*] Connecting to {self.target} via L2CAP (PSM 0x1001)...[/bold blue]")
         
         try:
-            self.sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_SEQPACKET, socket.BTPROTO_L2CAP)
+            self.sock = AAPSocket()
             self.sock.connect((self.target, 0x1001))
             self.log("[green][+] Connected![/green]")
             return True
-        except Exception as e:
+        except AAPConnectionError as e:
             self.log(f"[red][!] Connection failed: {e}[/red]")
+            return False
+        except Exception as e:
+            self.log(f"[red][!] Unexpected error: {e}[/red]")
             return False
 
     def send_handshake(self):
-        handshake = bytes.fromhex("00 00 04 00 01 00 02 00 00 00 00 00 00 00 00 00")
-        try:
-            self.sock.send(handshake)
-            self.log("[green][*] Handshake sent.[/green]")
-        except Exception as e:
-            self.log(f"[red][!] Handshake failed: {e}[/red]")
+        # AAPSocket handles handshake automatically on connect to 0x1001
+        pass
 
     def set_noise_control(self, mode):
         header = b'\x04\x00\x04\x00'

@@ -12,4 +12,5 @@ def reset_adapter(dev_id=0, console=None):
         print(msg)
         
     os.system(f"sudo hciconfig hci{dev_id} reset")
-    time.sleep(1)
+    os.system(f"sudo hciconfig hci{dev_id} up")
+    time.sleep(3)

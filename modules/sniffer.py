@@ -1,7 +1,7 @@
 import struct
 import select
 import sys
-import bluetooth._bluetooth as bluez
+import apybluez.bluetooth._bluetooth as bluez
 from rich.table import Table
 from rich.live import Live
 from core.hci_wrapper import open_dev, enable_le_scan

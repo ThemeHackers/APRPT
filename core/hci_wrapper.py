@@ -1,6 +1,6 @@
 import struct
 import socket
-import bluetooth._bluetooth as bluez
+import apybluez.bluetooth._bluetooth as bluez
 
 OGF_LE_CTL = 0x08
 OCF_LE_SET_RANDOM_ADDRESS = 0x0005

@@ -129,11 +129,13 @@ def run_cli_mode(args):
 
     elif mode == "sniff":
         from modules.sniffer import SnifferModule
+        reset_adapter(0, console)
         module = SnifferModule(console=console)
         module.start_sniff(target_mac=target_mac, output_file=args.log_file)
 
     elif mode == "bleed":
         from modules.fuzzer import FuzzerModule
+        reset_adapter(0, console)
         module = FuzzerModule(console=console)
         if target_mac:
              module.start_protocol_fuzzing(target_mac)
@@ -150,6 +152,7 @@ def run_cli_mode(args):
 
     elif mode == "control":
         from modules.control import ControlModule
+        reset_adapter(0, console)
         module = ControlModule(console=console, target=target_mac)
         module.start_control()
 
@@ -162,6 +165,7 @@ def run_cli_mode(args):
             if not target_mac:
                 console.print("[red][!] Target required for Activity Trigger.[/red]")
                 return
+            reset_adapter(0, console)
             module.start_activity_trigger(target_mac)
         else:
             console.print("[red]Please specify --attack zone or --attack activity[/red]")
@@ -210,7 +214,7 @@ def run_cli_mode(args):
 
 def check_hardware(mode):
     try:
-        import bluetooth._bluetooth as bluez
+        import apybluez.bluetooth._bluetooth as bluez
         sock = bluez.hci_open_dev(0)
         sock.close()
         console.print("[green][+][/green] Bluetooth Hardware (hci0) detected.")
@@ -334,21 +338,25 @@ def interactive_mode():
                 try:
                     if current_module == "advertise":
                         from modules.advertising import AdvertisingModule
+                      
                         mod = AdvertisingModule(console=console)
                         mod.start_spoof(model_name=spoof_model_name)
                         
                     elif current_module == "honeypot":
                         from modules.honeypot import HoneyPotModule
+
                         mod = HoneyPotModule(console=console, target_mac=target_mac)
                         mod.start_honeypot()
 
                     elif current_module == "sniff":
                         from modules.sniffer import SnifferModule
+                        reset_adapter(0, console)
                         mod = SnifferModule(console=console)
                         mod.start_sniff()
 
                     elif current_module == "bleed":
                         from modules.fuzzer import FuzzerModule
+                        reset_adapter(0, console)
                         mod = FuzzerModule(console=console)
                         if target_mac:
                              mod.start_protocol_fuzzing(target_mac)
@@ -360,6 +368,7 @@ def interactive_mode():
                         if not target_mac:
                              console.print("[red][!] Target required. 'set target <MAC>'[/red]")
                              continue
+                        reset_adapter(0, console)
                         mod = ControlModule(console=console, target=target_mac)
                         mod.start_control()
 
@@ -372,6 +381,7 @@ def interactive_mode():
                             if not target_mac:
                                 console.print("[red][!] Target required.[/red]")
                                 continue
+                            reset_adapter(0, console)
                             mod.start_activity_trigger(target_mac)
                         else:
                             console.print("[red]Set attack type with 'set attack <zone|activity>'[/red]")

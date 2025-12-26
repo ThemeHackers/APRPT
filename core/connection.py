@@ -1,7 +1,11 @@
-import socket
-import time
-import platform
 import sys
+import platform
+try:
+    from apybluez.apple.socket import AAPSocket
+    from apybluez.exceptions import AAPConnectionError
+except ImportError:
+    print("Error: apybluez not installed or configured correctly.")
+    sys.exit(1)
 
 class AAPConnection:
     def __init__(self, mac_address, console=None):
@@ -17,23 +21,18 @@ class AAPConnection:
             print(message)
 
     def connect(self):
-        if platform.system() != "Linux":
-            self.log("[red][!] CRITICAL: This tool uses raw L2CAP sockets via BlueZ and is ONLY supported on Linux.[/red]")
-            self.log(f"[!] Current detected OS: {platform.system()}")
-            return False
-
         self.log(f"[*] Attempting to connect to [bold]{self.mac_address}[/bold] on PSM {hex(self.psm)}...")
         try:
-            if not hasattr(socket, 'AF_BLUETOOTH') or not hasattr(socket, 'BTPROTO_L2CAP'):
-                self.log("[red][!] Error: socket.AF_BLUETOOTH or BTPROTO_L2CAP not supported by this Python interpreter.[/red]")
-                return False
-
-            self.sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_SEQPACKET, socket.BTPROTO_L2CAP)
+            self.sock = AAPSocket()
             self.sock.connect((self.mac_address, self.psm))
             self.log(f"[green][+] Connected to {self.mac_address}[/green]")
             return True
-        except Exception as e:
+        except AAPConnectionError as e:
             self.log(f"[red][!] Connection failed: {e}[/red]")
+            self.sock = None
+            return False
+        except Exception as e:
+            self.log(f"[red][!] Unexpected error: {e}[/red]")
             self.sock = None
             return False
 

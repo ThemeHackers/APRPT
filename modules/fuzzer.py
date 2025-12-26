@@ -60,10 +60,11 @@ class FuzzerModule:
     def start_protocol_fuzzing(self, target_mac):
         self.log(f"[bold red][*] Starting Protocol Fuzzer against {target_mac} (PSM 0x1001)...[/bold red]")
         reset_adapter(self.dev_id, self.console)
-        import socket
+        from apybluez.apple.socket import AAPSocket
+        from apybluez.exceptions import AAPConnectionError
         
         try:
-            sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_SEQPACKET, socket.BTPROTO_L2CAP)
+            sock = AAPSocket()
             sock.connect((target_mac, 0x1001))
             self.log("[green][+] Connected to Control Channel.[/green]")
             

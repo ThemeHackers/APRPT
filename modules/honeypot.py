@@ -5,7 +5,7 @@ import random
 import socket
 import select
 from core.hci_wrapper import start_le_advertising, stop_le_advertising, open_dev, ADV_IND, OGF_LE_CTL, OCF_LE_SET_ADVERTISE_ENABLE, disconnect_handle
-import bluetooth._bluetooth as bluez
+import apybluez.bluetooth._bluetooth as bluez
 from modules.reset import reset_adapter
 from rich.panel import Panel
 
@@ -86,7 +86,9 @@ class HoneyPotModule:
                 case = (random.randint(128, 228),)
                 packet_data = prefix + left + right + case + suffix
 
-              
+                pkt_hex = bytes(packet_data).hex()
+                self.log(f"[dim]DEBUG: Sending packet: {pkt_hex}[/dim]")
+
                 start_le_advertising(self.sock, min_interval=64, max_interval=64, adv_type=ADV_IND, data=packet_data, own_bdaddr_type=0x01)
                 
                 start_time = time.time()
