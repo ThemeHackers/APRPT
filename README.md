@@ -87,6 +87,7 @@ sudo apt update && sudo apt install -y bluez libpcap-dev libev-dev libnl-3-dev l
 
 ### 2. Python Setup
 **CRITICAL**: Install the custom `apybluez` driver included in this repo:
+
 **NOTE**: apybluez is an enhanced version of the original pybluez. I've fixed bugs, added support for newer Python versions, and included AAP-specific features to improve performance when working with APRPT.
 ```bash
 # Clone APRPT repo
