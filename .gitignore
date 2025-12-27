@@ -41,5 +41,4 @@ wheels/
 # Project specific
 pybluez/
 *.pcapng
-check_import.py
 .pytest_cache/
