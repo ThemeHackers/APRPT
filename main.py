@@ -53,6 +53,10 @@ def main():
         args = parser.parse_args()
         args_parsed = True
 
+        if hasattr(args, 'verbose') and args.verbose:
+            from core.tracer import enable_tracing
+            enable_tracing()
+
     try:
         if args_parsed:
             run_cli_mode(args)
