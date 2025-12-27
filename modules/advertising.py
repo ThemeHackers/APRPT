@@ -1,7 +1,6 @@
 import time
 import random
 from apybluez.hci.wrapper import start_spoof, stop_spoof
-from apybluez.apple.proximity import ProximityPairingPacket
 from apybluez.exceptions import HCISpoofingError
 from modules.reset import reset_adapter
 
@@ -96,7 +95,6 @@ class AdvertisingModule:
                 try:
           
                     rand_mac = bytes([random.randint(0, 255) for _ in range(6)])
-                    mac_str = ':'.join(f'{b:02x}' for b in rand_mac)
                     
                     self.sock = start_spoof(model_name=model_name, device_id=self.dev_id, 
                                           interval_min=interval_ms, interval_max=interval_ms,

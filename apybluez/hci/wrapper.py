@@ -3,7 +3,6 @@ import random
 import apybluez.bluetooth._bluetooth as _bt
 from ..apple.proximity import ProximityPairingPacket
 from ..exceptions import HCISpoofingError
-import time
 
 
 OGF_LE_CTL = 0x08

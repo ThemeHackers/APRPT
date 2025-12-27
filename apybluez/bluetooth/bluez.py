@@ -1,13 +1,30 @@
 import array
 import fcntl
-import sys
 import struct
 from errno import (EADDRINUSE, EBUSY, EINVAL)
 
-from bluetooth.btcommon import *
+from apybluez.bluetooth.btcommon import *
 import apybluez.bluetooth._bluetooth as _bt
-from apybluez.bluetooth._bluetooth import HCI, RFCOMM, L2CAP, SCO, SOL_L2CAP, \
-                                    SOL_RFCOMM, L2CAP_OPTIONS
+from apybluez.bluetooth._bluetooth import RFCOMM, L2CAP, SOL_L2CAP, L2CAP_OPTIONS
+
+__all__ = [
+    "BluetoothSocket",
+    "DeviceDiscoverer",
+    "advertise_service",
+    "byte_to_signed_int",
+    "discover_devices",
+    "find_service",
+    "get_acl_conn_handle",
+    "get_l2cap_options",
+    "lookup_name",
+    "read_flush_timeout",
+    "read_local_bdaddr",
+    "set_l2cap_mtu",
+    "set_l2cap_options",
+    "set_packet_timeout",
+    "stop_advertising",
+    "write_flush_timeout",
+]
 
 get_byte = int
 
