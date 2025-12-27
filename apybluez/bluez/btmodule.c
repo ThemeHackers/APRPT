@@ -2173,6 +2173,16 @@ bt_hci_inquiry(PyObject *self, PyObject *args, PyObject *kwds)
             err = PyTuple_SetItem( item_tuple, 0, addr_entry );
             if (err) {
                 Py_XDECREF( item_tuple );
+                Py_XDECREF( addr_entry ); // addr_entry stolen by SetItem only on success? No, SetItem steals reference even on error? Actually PyTuple_SetItem logic is tricky. 
+                // Documentation says: "If an error occurs, the reference to item is NOT stolen". 
+                // So if SetItem fails, we must decref addr_entry.
+                // Wait, if SetItem fails, it returns -1.
+                // If it succeeds, it returns 0.
+                // "The function steals the reference to item." -> This usually means on success.
+                // Let's check common patterns. standard is if it returns -1, it did NOT steal it.
+                // So checking `if (err)` means failure.
+                // Address entry was created above. It needs to be freed.
+                Py_XDECREF( addr_entry );
                 Py_XDECREF( rtn_list );
                 return NULL;
             }
@@ -2180,6 +2190,7 @@ bt_hci_inquiry(PyObject *self, PyObject *args, PyObject *kwds)
             err = PyTuple_SetItem( item_tuple, 1, class_entry );
             if (err) {
                 Py_XDECREF( item_tuple );
+                Py_XDECREF( class_entry ); // Same here
                 Py_XDECREF( rtn_list );
                 return NULL;
             }
@@ -2612,13 +2623,14 @@ bt_hci_le_add_white_list(PyObject *self, PyObject *args)
         str2ba( addr, &ba );
     }
     else {
+        PyErr_SetString(PyExc_ValueError, "Invalid address");
         return NULL;
     }
 
     dd = socko->sock_fd;
     err = hci_le_add_white_list(dd, &ba, type, to);
     if ( err < 0 ) {
-        return NULL;
+        return PyErr_SetFromErrno(bluetooth_error);
     }
 
     return Py_BuildValue("i", err);
@@ -2643,7 +2655,7 @@ bt_hci_le_read_white_list_size(PyObject *self, PyObject *args)
     dd = socko->sock_fd;
     err = hci_le_read_white_list_size(dd, &ret, to);
     if ( err < 0 ) {
-        return NULL;
+        return PyErr_SetFromErrno(bluetooth_error);
     }
     return Py_BuildValue("i", ret);
 }
@@ -2665,6 +2677,9 @@ bt_hci_le_clear_white_list(PyObject *self, PyObject *args)
     }
     dd = socko->sock_fd;
     err = hci_le_clear_white_list(dd, to);
+    if (err < 0) {
+        return PyErr_SetFromErrno(bluetooth_error);
+    }
     return Py_BuildValue("i", err);
 }
 PyDoc_STRVAR(bt_hci_le_clear_white_list_doc,

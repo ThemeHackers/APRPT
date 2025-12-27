@@ -1,0 +1,11 @@
+[
+  "tests/test_apybluez_functionality.py::TestAAPSocket::test_auto_handshake_on_apple_psm",
+  "tests/test_apybluez_functionality.py::TestAAPSocket::test_high_speed_fallback",
+  "tests/test_apybluez_functionality.py::TestAAPSocket::test_send_handshake",
+  "tests/test_apybluez_functionality.py::TestAAPSocket::test_set_anc_mode",
+  "tests/test_apybluez_functionality.py::TestPacketBuilder::test_build_packet_header",
+  "tests/test_apybluez_functionality.py::TestPacketBuilder::test_handshake_packet",
+  "tests/test_apybluez_functionality.py::TestPacketBuilder::test_volume_ducking",
+  "tests/test_apybluez_functionality.py::TestProximityPairingPacket::test_encrypted_payload_randomness",
+  "tests/test_apybluez_functionality.py::TestProximityPairingPacket::test_structure"
+]
