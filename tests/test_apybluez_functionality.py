@@ -58,6 +58,8 @@ class TestAAPSocket(unittest.TestCase):
         self.mock_sock = MagicMock()
         # Create AAPSocket with mocked internal socket
         self.sock = AAPSocket(_sock=self.mock_sock)
+        # Mock connection state for tests
+        self.sock.connected = True
 
     def test_auto_handshake_on_apple_psm(self):
         # addr = (mac, psm)
