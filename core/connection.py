@@ -1,10 +1,16 @@
 import sys
 import platform
+import traceback
+
 try:
     from apybluez.apple.socket import AAPSocket
     from apybluez.exceptions import AAPConnectionError
 except ImportError:
-    print("Error: apybluez not installed or configured correctly.")
+    traceback.print_exc()
+    print("\n[!] Error: 'apybluez' C extension not present.")
+    print("    Please resolve by running:")
+    print("    pip install -e .")
+    print("    (This compiles the required C extensions)")
     sys.exit(1)
 
 class AAPConnection:
