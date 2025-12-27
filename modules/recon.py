@@ -55,6 +55,7 @@ class ReconModule:
         "5E133": ["CVE-2024-27867 (Bluetooth Access Bypass)"]
     }
 
+
     def check_firmware_vulnerability(self, fw_version):
         vulns = self.FIRMWARE_VULNS.get(fw_version)
         if vulns:
