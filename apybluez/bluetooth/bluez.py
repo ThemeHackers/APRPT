@@ -3,7 +3,7 @@ import fcntl
 import struct
 from errno import (EADDRINUSE, EBUSY, EINVAL)
 
-from bluetooth.btcommon import *
+from apybluez.bluetooth.btcommon import *
 import apybluez.bluetooth._bluetooth as _bt
 from apybluez.bluetooth._bluetooth import RFCOMM, L2CAP, SOL_L2CAP, L2CAP_OPTIONS
 
