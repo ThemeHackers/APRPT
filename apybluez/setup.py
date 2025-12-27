@@ -1,6 +1,5 @@
-import os
 import sys
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, Extension
 
 ext_modules = []
 if sys.platform.startswith('linux'):

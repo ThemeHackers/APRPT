@@ -1,5 +1,5 @@
 import lightblue
-from .btcommon import *
+from .btcommon import RFCOMM
 
 def discover_devices(duration=8, flush_cache=True, lookup_names=False,
         lookup_class=False, device_id=-1):

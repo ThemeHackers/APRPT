@@ -5,9 +5,7 @@ from apybluez.bluetooth.btcommon import *
 __version__ = 0.30
 
 def _dbg(*args):
-    return
-    sys.stderr.write(*args)
-    sys.stderr.write("\n")
+    pass
 
 if sys.platform == "win32":
     from bluetooth.msbt import *

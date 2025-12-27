@@ -2,14 +2,12 @@ import unittest
 from unittest.mock import MagicMock
 import sys
 import os
-import struct
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from apybluez.apple.packets import PacketBuilder
 from apybluez.apple.proximity import ProximityPairingPacket
 from apybluez.apple.socket import AAPSocket
-import apybluez.bluetooth as bluetooth
 
 class TestPacketBuilder(unittest.TestCase):
     def test_handshake_packet(self):

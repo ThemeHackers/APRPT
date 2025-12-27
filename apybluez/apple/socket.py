@@ -1,6 +1,6 @@
 import apybluez.bluetooth as bluetooth
 from .packets import PacketBuilder
-from ..exceptions import AAPConnectionError, AAPCommandError, AAPError
+from ..exceptions import AAPConnectionError, AAPCommandError
 
 class AAPSocket(bluetooth.BluetoothSocket):
     def __init__(self, proto=bluetooth.L2CAP, _sock=None):
