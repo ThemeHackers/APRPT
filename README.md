@@ -86,13 +86,25 @@ sudo apt update && sudo apt install -y bluez libpcap-dev libev-dev libnl-3-dev l
 ```
 
 ### 2. Python Setup
-**CRITICAL**: Do NOT install `pybluez` via pip directly. Use the source:
+**CRITICAL**: Install the custom `apybluez` driver included in this repo:
+
+**NOTE**: apybluez is an enhanced version of the original pybluez. I've fixed bugs, added support for newer Python versions, and included AAP-specific features to improve performance when working with APRPT.
 ```bash
-# Install PyBluez from source (Fixed for Python 3)
-pip3 install git+https://github.com/pybluez/pybluez.git#egg=pybluez
+# Clone APRPT repo
+git clone https://github.com/ThemeHackers/APRPT
+
+# Change directory
+cd APRPT
+
+# Install Environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install apybluez (Local Driver)
+pip3 install ./apybluez
 
 # Install crypto libs
-pip3 install pycryptodome rich scapy
+pip3 install -r requirements.txt
 ```
 
 ---
