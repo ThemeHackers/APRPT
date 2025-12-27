@@ -54,9 +54,9 @@ Choose a model ID (default=1): 3
 ```text
 ...
 Device Metadata Report:
-- Firmware: 3A283
-[bold red][!] VULNERABILITY DETECTED for Firmware 3A283:[/bold red]
-    - CVE-2020-9999 (Audio Buffer Overflow)
+- Firmware: 5B58
+[bold red][!] VULNERABILITY DETECTED for Firmware 5B58:[/bold red]
+    - CVE-2024-27867 (Bluetooth Access Bypass)
 ```
 
 ---

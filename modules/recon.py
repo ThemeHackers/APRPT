@@ -48,7 +48,7 @@ class ReconModule:
             self.log("[yellow][-] No response to metadata request.[/yellow]")
 
     FIRMWARE_VULNS = {
-        "3A283": ["CVE-2021-30883 (Bluetooth Memory Corruption)"],
+
         "4A400": ["CVE-2023-27964 (Authentication Bypass - Spoofing)"],
         "4C165": ["CVE-2023-27964 (Authentication Bypass - Spoofing)"],
         "5B58":  ["CVE-2024-27867 (Bluetooth Access Bypass)", "CVE-2023-27964"],
