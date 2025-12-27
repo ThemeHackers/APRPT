@@ -86,13 +86,13 @@ sudo apt update && sudo apt install -y bluez libpcap-dev libev-dev libnl-3-dev l
 ```
 
 ### 2. Python Setup
-**CRITICAL**: Do NOT install `pybluez` via pip directly. Use the source:
+**CRITICAL**: Install the custom `apybluez` driver included in this repo:
 ```bash
-# Install PyBluez from source (Fixed for Python 3)
-pip3 install git+https://github.com/pybluez/pybluez.git#egg=pybluez
+# Install apybluez (Local Driver)
+pip3 install ./apybluez
 
 # Install crypto libs
-pip3 install pycryptodome rich scapy
+pip3 install -r requirements.txt
 ```
 
 ---
