@@ -1,4 +1,3 @@
-pybluez
 rich
 pycryptodome
 scapy
