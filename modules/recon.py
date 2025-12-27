@@ -51,9 +51,8 @@ class ReconModule:
 
         "4A400": ["CVE-2023-27964 (Authentication Bypass - Spoofing)"],
         "4C165": ["CVE-2023-27964 (Authentication Bypass - Spoofing)"],
-        "5B58":  ["CVE-2024-27867 (Bluetooth Access Bypass)", "CVE-2023-27964"],
-        "5E133": ["CVE-2024-27867 (Bluetooth Access Bypass)"],
-        "6F7":   ["CVE-2024-27867 (Bluetooth Access Bypass)"]
+        "5B58":  ["CVE-2024-27867 (Bluetooth Access Bypass)"],
+        "5E133": ["CVE-2024-27867 (Bluetooth Access Bypass)"]
     }
 
     def check_firmware_vulnerability(self, fw_version):
