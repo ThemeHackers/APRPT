@@ -41,7 +41,7 @@ jobs:
 
       - name: Install apybluez
         run: |
-          pip install ./apybluez
+          pip install -e ./apybluez
 
       - name: Run Tests
         run: |
