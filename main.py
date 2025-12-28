@@ -37,6 +37,10 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable detailed packet inspection (analyze mode)")
     parser.add_argument("--definitions", action="store_true", help="Show opcode definitions table")
     parser.add_argument("--smart", action="store_true", help="Enable Smart Enhancements (Ghosting, Adaptive, Debounce)")
+    parser.add_argument("--dynamic-batt", action="store_true", help="Enable Dynamic Battery Spoofing (Randomize battery levels)")
+    parser.add_argument("--duration", type=int, default=30, help="Duration to hold a MAC address (seconds). Default 30.")
+    parser.add_argument("--interval", type=int, default=160, help="Advertising Interval (ms). Default 160. Try 20 for aggressive mode.")
+    parser.add_argument("-r", "--random", action="store_true", help="Loop through all available models randomly")
 
     if os.geteuid() != 0:
         console.print("[red][!] WARNING: Not running as root. APRPT requires sudo for Bluetooth operations.[/red]")
@@ -104,9 +108,14 @@ def run_cli_mode(args):
             
             if found_id:
                 model_name = device_data[found_id]['name']
-                module.start_spoof(model_name=model_name)
+                module.start_spoof(model_name=model_name, dynamic_batt=args.dynamic_batt, 
+                                   duration=args.duration, interval_ms=args.interval, random_mode=args.random)
             else:
                  console.print(f"[red][!] Model '{args.model}' not found. Using default.[/red]")
+        elif args.random:
+            
+             module.start_spoof(model_name="Random", dynamic_batt=args.dynamic_batt, 
+                                duration=args.duration, interval_ms=args.interval, random_mode=True)
         else:
              
             table = Table(title="Available Spoof Models", show_header=True, header_style="bold magenta")
@@ -119,7 +128,7 @@ def run_cli_mode(args):
             try:
                 choice = input().strip() or "1"
                 if choice.isdigit() and int(choice) in device_data:
-                     module.start_spoof(model_name=device_data[int(choice)]['name'])
+                     module.start_spoof(model_name=device_data[int(choice)]['name'], dynamic_batt=False)
                 else:
                      console.print("[red][!] Invalid. Defaulting.[/red]")
                      module.start_spoof(model_name="AirPods")

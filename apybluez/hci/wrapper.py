@@ -29,7 +29,7 @@ def _set_advertising_parameters(sock, min_interval=0x00A0, max_interval=0x00A0,
                           0)
     _bt.hci_send_cmd(sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_PARAMETERS, cmd_pkt)
 
-def start_spoof(model_name="AirPods Pro", device_id=0, interval_min=160, interval_max=160, random_mac=True):
+def start_spoof(model_name="AirPods Pro", device_id=0, interval_min=160, interval_max=160, random_mac=True, **kwargs):
     """
     Starts spoofing the specified model using efficient HCI commands.
     If random_mac is True, generates a random static address.
@@ -57,13 +57,14 @@ def start_spoof(model_name="AirPods Pro", device_id=0, interval_min=160, interva
         raise HCISpoofingError(f"Failed to set advertising params: {e}")
 
     try:
-        ad_data = ProximityPairingPacket.build(model_name=model_name)
+        ad_data = ProximityPairingPacket.build(model_name=model_name, **kwargs)
     except ValueError as e:
         raise HCISpoofingError(f"Failed to build packet for model {model_name}: {e}")
     
     if len(ad_data) > 31:
         ad_data = ad_data[:31]
 
+    
     if hasattr(_bt, "hci_le_set_advertising_data"):
         try:
             _bt.hci_le_set_advertising_data(sock, ad_data)
@@ -79,6 +80,23 @@ def start_spoof(model_name="AirPods Pro", device_id=0, interval_min=160, interva
         raise HCISpoofingError(f"Failed to enable advertising: {e}")
     
     return sock
+
+def update_data(sock, model_name="AirPods Pro", **kwargs):
+    """
+    Updates the advertising data on an active socket without restarting.
+    """
+    try:
+        ad_data = ProximityPairingPacket.build(model_name=model_name, **kwargs)
+        if len(ad_data) > 31:
+            ad_data = ad_data[:31]
+        
+        if hasattr(_bt, "hci_le_set_advertising_data"):
+             _bt.hci_le_set_advertising_data(sock, ad_data)
+        else:
+             raise HCISpoofingError("Optimized hci_le_set_advertising_data not found.")
+             
+    except Exception as e:
+        raise HCISpoofingError(f"Failed to update data: {e}")
 
 def stop_spoof(sock):
     if sock:
